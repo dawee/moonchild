@@ -3,5 +3,6 @@
 *.hex
 *.out
 *.bin
-lua-test/*.c
+test/*-test
+
 
