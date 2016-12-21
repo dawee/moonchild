@@ -1,0 +1,82 @@
+2009-03-13
+  upgraded to metalua 0.5 from git
+
+2008-09-20
+  upgraded to metalua libraries to git version
+    c995760d4ba67c4250ac6029c30ce9491e34ccc2 , which incorporates parsing
+    bug patches and new lineinfo/comments in ASTs.
+  added: Lua source comments now transfered to C source.
+  added: C functions converted from Lua functions are now named based on
+         the Lua function name (e.g. "function example()" --> "int
+         lcf1_example(lua_State*)").
+  refactor: split lua2c.lua into lua2c.lua + ast2cast.lua + cast2string.lua.
+  changed: made ast_to_cast reentrant.
+
+2008-08-02
+  added: support LUA_INIT environment variable.
+         Recommended by Shmuel Zeigerman
+
+2008-08-01
+  added: -C (C source generation only) command-line switch to clua.
+  added: debugging: assert stack checks between statements
+  fixed: warning from "unused variable `lc_nextra'"
+
+2008-07-31
+  added: -c (compile only) command-line switch to clua.
+  fixed numeric ops with metamethods returning non-numbers
+  fixed: handle "(error object is not a string)"
+  fixed: elseif expression evaluation evaluation order
+
+2008-07-30
+  implemented: ignore shebang lines (#...)
+  implemented: globals via lua_getfield/lua_setfield/LUA_ENVIRONINDEX
+    rather than lua_getglobal/lua_setglobal.
+  fixed bug in local function when an upvalue.
+  fixed mlp/gg lexer bug in numeric escapes \ddd in strings.
+  fixed mlp/gg lexer bug in "\\\n" in strings.
+  fixed mlp/gg lexer bug in numbers, e.g. ".1"
+
+2008-07-29
+  optimized locals not used as upvalues
+  fixed numeric break stack bug
+  fixed bug in length (#) op for non-temporary object
+
+2008-07-26
+  implemented closures/upvalues.  note: in this initial stage,
+    all locals are implemented as upvalues, which is slow
+    (this is planned to be improved)
+  implemented "local function"
+  implemented numeric constants +-inf, nan
+  fixed multiassignment
+  other bug fixes
+
+2008-07-22
+  implemented: vararg (...), command-line arguments,
+               unary -, # (length), repeat/until, elseif, `Localrec
+  fixed function calls where number of actual parameters not equal
+    to number of formal parameters.
+  other bug fixes
+
+2008-07-19
+  major refactoring: Conversion process is now
+    Lua string -> Lua AST -> C AST -> C string.
+    (last two were previously combined)
+  renamed lua2c script to clua
+  other bug fixes
+
+2008-07-18
+  implemented: <=, for in, arg
+  fixed if stack usage
+
+2008-07-17
+  implemented: do, not
+  fixed and/or
+  other bug fixes
+
+2008-07-16
+  implemented: concat, table, method call, assign to locals, while.
+  arithmetic binary ops now generate functions rather than inline code.
+  many bug fixes
+
+2008-07-15
+  initial experimental version
