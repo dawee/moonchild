@@ -1,5 +1,7 @@
 *.o
 *.elf
 *.hex
+*.out
+*.bin
 lua-test/*.c
 
