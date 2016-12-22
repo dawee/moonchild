@@ -1,10 +1,12 @@
 sources := $(shell find src -name "*.c")
+fixtures := $(shell find test/fixtures -name "*.lua")
+fixtures_out := $(subst .lua,.out,${fixtures})
 cflags := -I./src -Wall -Werror
 
-test: clean-test avr-build-test fixtures header-test
+test: clean-test avr-build-test ${fixtures_out} header-test
 
-fixtures:
-	@./deps/lua-5.3.3/src/luac -o test/fixtures/empty.out test/fixtures/empty.lua
+test/fixtures/%.out: test/fixtures/%.lua
+	@./deps/lua-5.3.3/src/luac -o $@ $<
 
 avr-build-test:
 	@avr-gcc -g -Os -mmcu=atmega32 ${cflags} -c ${sources}
