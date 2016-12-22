@@ -4,7 +4,7 @@ cflags := -I./src -Wall -Werror
 test: clean-test avr-build-test fixtures header-test
 
 fixtures:
-	@luac -o test/fixtures/empty.out test/fixtures/empty.lua
+	@./deps/lua-5.3.3/src/luac -o test/fixtures/empty.out test/fixtures/empty.lua
 
 avr-build-test:
 	@avr-gcc -g -Os -mmcu=atmega32 ${cflags} -c ${sources}
