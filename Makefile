@@ -12,9 +12,9 @@ avr-build-test:
 clean-test:
 	@rm -f test/*-test
 
-header-test:
-	@gcc ${cflags} ${sources} test/header-test.c -o test/header-test
-	@./test/header-test
+%-test:
+	@gcc ${cflags} ${sources} test/$@.c -o test/$@
+	@./test/$@
 
 
 .PHONY: test

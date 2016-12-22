@@ -19,5 +19,6 @@ int main() {
     return 1;
   }
 
+  printf("[header-test] ok\n");
   return 0;
 }
