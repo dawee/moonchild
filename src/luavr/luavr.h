@@ -14,6 +14,8 @@ typedef struct {
 } luavr_header;
 
 
+luavr_header * luavr_init_header();
 void luavr_read_header(luavr_header *, char *);
+void luavr_free_header(luavr_header *);
 
 #endif
