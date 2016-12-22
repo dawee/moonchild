@@ -5,4 +5,7 @@
 *.bin
 test/*-test
 
+deps/lua-5.3.3/src/liblua.a
+deps/lua-5.3.3/src/lua
+deps/lua-5.3.3/src/luac
 
