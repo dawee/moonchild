@@ -1,4 +1,5 @@
 #include <stdio.h>
+#include <stdlib.h>
 #include <luavr/luavr.h>
 
 static char program[] = {
@@ -6,19 +7,24 @@ static char program[] = {
 };
 
 int main() {
-  luavr_header header;
-  luavr_read_header(&header, program);
+  luavr_header * header = (luavr_header *) malloc(sizeof(luavr_header));
 
-  if (header.version_number != 0x51) {
+  luavr_read_header(header, program);
+
+  if (header->version_number != 0x51) {
     printf("[header-test] version number != 0x51\n");
+    free(header);
     return 1;
   }
 
-  if (header.format_version != 0) {
+  if (header->format_version != 0) {
     printf("[header-test] format version != 0\n");
+    free(header);
     return 1;
   }
 
   printf("[header-test] ok\n");
+
+  free(header);
   return 0;
 }

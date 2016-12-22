@@ -1,5 +1,5 @@
 sources := $(shell find src -name "*.c")
-cflags := -I./src
+cflags := -I./src -Wall -Werror
 
 test: clean-test avr-build-test fixtures header-test
 
