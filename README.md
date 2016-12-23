@@ -40,17 +40,17 @@ http://the-ravi-programming-language.readthedocs.io/en/latest/lua_bytecode_refer
 0x08
 0x78 
 0x56
-0x00 
-0x00
-0x00 
-0x00
-0x00 
-0x00
-0x00 
-0x00
-0x00 
-0x00
-0x00 
+0x00 => line number in source code where chunk starts (0 for main chunk) 1 / 4
+0x00 => line number in source code where chunk starts (0 for main chunk) 2 / 4
+0x00 => line number in source code where chunk starts (0 for main chunk) 3 / 4 
+0x00 => line number in source code where chunk starts (0 for main chunk) 4 / 4
+0x00 => line number in source code where chunk stops (0 for main chunk) 1 / 4
+0x00 => line number in source code where chunk stops (0 for main chunk) 2 / 4
+0x00 => line number in source code where chunk stops (0 for main chunk) 3 / 4
+0x00 => line number in source code where chunk stops (0 for main chunk) 4 / 4
+0x00 => number of parameters
+0x00 => vararg flag
+0x00 => number of registers used in this function
 0x28
 0x77
 0x40
