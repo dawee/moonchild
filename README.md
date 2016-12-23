@@ -27,12 +27,12 @@ http://the-ravi-programming-language.readthedocs.io/en/latest/lua_bytecode_refer
 0x61 => lua signature 4/4
 0x53 => lua version (5.3) 1/2
 0x00 => lua version (5.3) 2/2
-0x19
-0x93 
-0x0d
-0x0a 
-0x1a
-0x0a 
+0x19 => Lua 5.2 "1993" stuff 1/6
+0x93 => Lua 5.2 "1993" stuff 2/6
+0x0d => Lua 5.2 "1993" stuff 3/6
+0x0a => Lua 5.2 "1993" stuff 4/6
+0x1a => Lua 5.2 "1993" stuff 5/6
+0x0a => Lua 5.2 "1993" stuff 6/6
 0x04
 0x08 
 0x04
