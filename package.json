@@ -1,0 +1,23 @@
+{
+  "name": "moonchild",
+  "version": "1.0.0",
+  "description": "",
+  "main": "lib/moonchild.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/dawee/moonchild.git"
+  },
+  "author": "",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/dawee/moonchild/issues"
+  },
+  "homepage": "https://github.com/dawee/moonchild#readme",
+  "dependencies": {
+    "luac-5.3.3-prebuilt-linux-x86_64": "1.0.0",
+    "minimist": "1.2.0"
+  }
+}
