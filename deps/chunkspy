@@ -1,2 +1,0 @@
-#!/usr/bin/env bash
-./deps/lua-5.3.3/src/lua ./deps/chunkspy.lua $@
