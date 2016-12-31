@@ -5,6 +5,7 @@ const os = require('os');
 const fs = require('fs');
 const hat = require('hat');
 const path = require('path');
+const ncp = require('ncp');
 const {exec} = require('child_process');
 const _mkdirp = require('mkdirp');
 
@@ -18,17 +19,36 @@ const getBinDir = () => new Promise(
 );
 
 const writeSketch = (filename, buf) => new Promise(
-  resolve => fs.writeFile(filename, template(buf), () => resolve())
+  (resolve, reject) => fs.writeFile(filename, template(buf), err => {
+    if (!!err) return reject(err);
+
+    resolve();
+  })
 );
 
 const luac = (infile, outfile) => getBinDir().then(binDir => new Promise(
-  resolve => exec(`${binDir}/luac -o ${outfile} ${infile}`, (err) => resolve())
+  (resolve, reject) => exec(`${binDir}/luac -o ${outfile} ${infile}`, (err) => {
+    if (!!err) return reject(err);
+
+    resolve();
+  })
 ));
 
 const readLuacBuffer = filename => new Promise(
-  resolve => fs.readFile(filename, (err, buf) => resolve(buf))
+  (resolve, reject) => fs.readFile(filename, (err, buf) => {
+    if (!!err) return reject(err);
+
+    resolve(buf);
+  })
 );
 
+const copyTree = (src, dst) => new Promise(
+  (resolve, reject) => ncp(src, dst, err => {
+    if (!!err) return reject(err);
+
+    resolve();
+  })
+);
 
 const template = buf => `
 /*
@@ -66,12 +86,13 @@ const template = buf => `
  *                                                                    L:          
  */ 
 
+#include "moonchild.h"
 #include "Arduboy.h"
 
 Arduboy arduboy;
 
 static unsigned char lua_program[] = {
-${[...buf.entries()].map(
+${(!!buf ? [...buf.entries()] : []).map(
   ([index, val]) => `  0x${val.toString(16)}`
 ).join(',\n')}
 };
@@ -79,6 +100,7 @@ ${[...buf.entries()].map(
 void setup() {
   arduboy.begin();
   arduboy.setFrameRate(15);
+  moonchild_run(lua_program);
 }
 
 void loop() {
@@ -115,11 +137,18 @@ const basename = path.basename(filename, '.lua');
 const buildpath = path.join(path.dirname(filename), 'build', basename);
 const sketchname = path.join(buildpath, `${basename}.ino`);
 const luacTMP = path.join(os.tmpdir(), hat());
-
+const libSRC = path.join(__dirname, '..', 'src', 'moonchild');
+const libDST = path.join(buildpath); 
 
 
 mkdirp(buildpath)
   .then(() => luac(filename, luacTMP))
+  .catch(err => console.error('Error : Failed to compile Lua script\n', err))
+  .then(() => copyTree(libSRC, libDST))
+  .catch(err => console.error('Error : Failed copy moonchild lib\n', err))
   .then(() => readLuacBuffer(luacTMP))
+  .catch(err => console.error('Error : Failed to read luac output\n', err))
   .then(buf => writeSketch(sketchname, buf))
+  .catch(err => console.error('Error : Failed to write sketch\n', err))
+  .then(() => 'Build done.')
 
