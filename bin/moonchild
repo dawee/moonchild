@@ -1,4 +1,61 @@
 #!/usr/bin/env node
 
 const argv = require('minimist')(process.argv.slice(2));
+const fs = require('fs');
+const path = require('path');
+const _mkdirp = require('mkdirp');
+
+const filename = argv._[0];
+
+const template = () => `
+#include "Arduboy.h"
+
+Arduboy arduboy;
+
+void setup() {
+  arduboy.begin();
+  arduboy.setFrameRate(15);
+}
+
+void loop() {
+  if (!(arduboy.nextFrame())) return;
+
+  arduboy.clear();
+
+  // Stuff
+
+  arduboy.display();
+}
+`;
+
+
+const mkdirp = dir => new Promise(resolve => _mkdirp(dir, () => resolve()));
+const writeSketch = (filename, ctx) => new Promise(
+  resolve => fs.writeFile(filename, template(ctx), () => resolve())
+);
+
+
+function usage() {
+  console.log('usage: moonchild <LUA FILE>');
+}
+
+
+if (!filename) {
+  usage();  
+  process.exit(1);
+}
+
+
+if (!fs.existsSync(filename)) {
+  console.error(`"${filename}"" does not exist`);
+  process.exit(1);  
+}
+
+const basename = path.basename(filename, '.lua');
+const buildpath = path.join(path.dirname(filename), 'build', basename);
+const sketchname = path.join(buildpath, `${basename}.ino`);
+
+mkdirp(buildpath)
+  .then(() => writeSketch(sketchname))
+  .then(() => console.log('done'));
 
