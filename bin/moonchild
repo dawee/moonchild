@@ -87,9 +87,6 @@ const template = buf => `
  */ 
 
 #include "moonchild.h"
-#include "Arduboy.h"
-
-Arduboy arduboy;
 
 static unsigned char lua_program[] = {
 ${(!!buf ? [...buf.entries()] : []).map(
@@ -98,19 +95,7 @@ ${(!!buf ? [...buf.entries()] : []).map(
 };
 
 void setup() {
-  arduboy.begin();
-  arduboy.setFrameRate(15);
-  moonchild_run(lua_program);
-}
-
-void loop() {
-  if (!(arduboy.nextFrame())) return;
-
-  arduboy.clear();
-
-  // Stuff
-
-  arduboy.display();
+  moonchild_run(lua_program, ${buf.length});
 }
 `;
 

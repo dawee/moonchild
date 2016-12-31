@@ -2,6 +2,6 @@
 #define MOONCHILD_H
 
 
-void moonchild_run(unsigned char []);
+void moonchild_run(unsigned char *, unsigned);
 
 #endif
