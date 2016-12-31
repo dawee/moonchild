@@ -7,9 +7,19 @@
 static Arduboy arduboy;
 
 typedef struct {
+  unsigned char opcode;
+} lua_instruction;
+
+typedef struct {
   unsigned luac_size;
   unsigned char * luac;
   unsigned cursor;
+  unsigned top_func_name_size;
+  char * top_func_name;
+  unsigned instructions_count;
+  lua_instruction * instructions;
+  unsigned constants_count;
+  unsigned first_constant;
 } lua_program;
 
 
@@ -20,6 +30,10 @@ static unsigned char read_byte(lua_program * program) {
   return byte;
 }
 
+static skip_bytes(lua_program * program, unsigned size) {
+  program->cursor += size;
+}
+
 static void read_literal(lua_program * program, char * output, unsigned size) {
   for (unsigned index = 0; index < size; ++index) {
     output[index] = (char *) read_byte(program);
@@ -28,9 +42,41 @@ static void read_literal(lua_program * program, char * output, unsigned size) {
   output[size] = '\0';
 }
 
+static void read_top_func_name(lua_program * program) {
+  program->top_func_name_size = (unsigned) read_byte(program) - 1;
+  program->top_func_name = (char *) malloc(program->top_func_name_size + 1);
+
+  read_literal(program, program->top_func_name, program->top_func_name_size);  
+}
+
+static int read_int(lua_program * program) {
+  int res = read_byte(program);
+
+  skip_bytes(program, 3);
+
+  return res;
+}
+
+static void read_code(lua_program * program) {
+  program->instructions_count = read_int(program);
+  program->instructions = (lua_instruction *) malloc(program->instructions_count * sizeof(lua_instruction));
+
+  for (unsigned index = 0; index < program->instructions_count; ++index) {
+    program->instructions[index].opcode = read_byte(program);
+    skip_bytes(program, 3);
+  }
+}
+
+static void read_constants(lua_program * program) {
+  program->constants_count = read_int(program);
+
+  if (program->constants_count <= 0) return;
+
+  skip_bytes(program, 1); // constant type
+  program->first_constant = read_int(program);
+}
+
 void moonchild_run(unsigned char * luac, unsigned luac_size) {
-  unsigned name_size;
-  char buffer[255];
   lua_program * program = (lua_program *) malloc(sizeof(lua_program));
 
   program->luac = luac;
@@ -39,19 +85,25 @@ void moonchild_run(unsigned char * luac, unsigned luac_size) {
 
   arduboy.begin();
   arduboy.setFrameRate(15);
+  
+  skip_bytes(program, 33);  // header
+  skip_bytes(program, 1);  // sizeup values
 
+  read_top_func_name(program);
 
-  // header
-  for (unsigned index = 0; index < 33; ++index) {
-    read_byte(program);
-  }
+  skip_bytes(program, 4);  // first line defined
+  skip_bytes(program, 4);  // last line defined
+  skip_bytes(program, 1);  // numparams
+  skip_bytes(program, 1);  // isvarargs
+  skip_bytes(program, 1);  // maxstacksize
 
-  // sizeup values
-  read_byte(program);
+  read_code(program);
+  read_constants(program);
 
-  name_size = (unsigned) read_byte(program) - 1;
+  char buffer[255];
 
-  read_literal(program, buffer, name_size);
+  sprintf(buffer, "constant = %d", program->first_constant);
+
 
   while(1) {
     if (!(arduboy.nextFrame())) continue;
@@ -64,5 +116,7 @@ void moonchild_run(unsigned char * luac, unsigned luac_size) {
     arduboy.display();    
   }
 
+  free(program->top_func_name);
+  free(program->instructions);
   free(program);
 }
