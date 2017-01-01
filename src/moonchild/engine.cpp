@@ -20,7 +20,7 @@ typedef struct {
   uint16_t instructions_count;
   lua_instruction * instructions;
   uint16_t constants_count;
-  int64_t first_constant;
+  int64_t * constants;
 } lua_program;
 
 
@@ -82,11 +82,14 @@ static void read_code(lua_program * program) {
 
 static void read_constants(lua_program * program) {
   program->constants_count = read_int(program);
+  program->constants = (int64_t *) malloc(program->constants_count * sizeof(int64_t));
 
   if (program->constants_count <= 0) return;
 
-  skip_bytes(program, 1); // constant type
-  program->first_constant = read_lua_integer(program);
+  for (uint8_t index = 0; index < program->constants_count; ++index) {
+    skip_bytes(program, 1); // constant type
+    program->constants[index] = read_lua_integer(program);    
+  }
 }
 
 static void int64_to_str(char * str, int64_t val) {
@@ -108,7 +111,6 @@ static void int64_to_str(char * str, int64_t val) {
     memo = memo - (divider * divided); 
     divider = divider / 10;    
   }
-
 
   str[cursor] = '\0';
 }
@@ -140,9 +142,8 @@ void moonchild_run(uint16_t luac, uint16_t luac_size) {
 
   char buffer[255];
 
-  //sprintf(buffer, "%d", program->first_constant / 100000000000);
 
-  int64_to_str(buffer, program->first_constant);
+  int64_to_str(buffer, program->constants[0] + program->constants[1]);
 
 
   while(1) {
