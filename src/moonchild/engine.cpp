@@ -7,9 +7,14 @@
 
 static Arduboy arduboy;
 
+
 typedef struct {
-  unsigned char opcode;
+  uint8_t opcode;
+  uint16_t a;
+  uint32_t b;
+  uint16_t c;
 } lua_instruction;
+
 
 typedef struct {
   uint16_t luac_size;
@@ -75,8 +80,21 @@ static void read_code(lua_program * program) {
   program->instructions = (lua_instruction *) malloc(program->instructions_count * sizeof(lua_instruction));
 
   for (uint16_t index = 0; index < program->instructions_count; ++index) {
-    program->instructions[index].opcode = read_byte(program);
-    skip_bytes(program, 3);
+    uint32_t instruction = read_int(program);
+
+    program->instructions[index].opcode = instruction & 0x3F;
+      program->instructions[index].a = (instruction & 0x3FC0) >> 6;
+
+    switch(program->instructions[index].opcode) {
+      case OPCODE_LOADK:
+      case OPCODE_LOADKX:
+        program->instructions[index].b = (instruction & 0xFFFFC000) >> 14;        
+        break;
+      default:
+        program->instructions[index].b = (instruction & 0xFF800000) >> 23;
+        program->instructions[index].c = (instruction & 0x7FC000) >> 14;
+        break;
+    };
   }
 }
 
@@ -116,7 +134,7 @@ static void int64_to_str(char * str, int64_t val) {
     }
 
     memo = memo - (divider * divided); 
-    divider = divider / 10;    
+    divider = divider / 10;
   }
 
   str[cursor] = '\0';
@@ -150,7 +168,7 @@ void moonchild_run(uint16_t luac, uint16_t luac_size) {
   char buffer[255];
 
 
-  int64_to_str(buffer, program->constants[0]);
+  sprintf(buffer, "ins[2](a/b) = %d,%d", program->instructions[2].a, program->instructions[2].b);
 
 
   while(1) {
