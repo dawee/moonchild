@@ -20,7 +20,7 @@ typedef struct {
   uint16_t instructions_count;
   lua_instruction * instructions;
   uint16_t constants_count;
-  uint16_t first_constant;
+  int64_t first_constant;
 } lua_program;
 
 
@@ -50,10 +50,22 @@ static void read_top_func_name(lua_program * program) {
   read_literal(program, program->top_func_name, program->top_func_name_size);  
 }
 
-static int read_int(lua_program * program) {
-  int res = read_byte(program);
+static int32_t read_int(lua_program * program) {
+  int32_t res = 0;
 
-  skip_bytes(program, 3);
+  for (uint16_t index = 0; index < INT_SIZE; ++index) {
+    res += (((int32_t) read_byte(program)) << (8 * index));
+  }
+
+  return res;
+}
+
+static int64_t read_lua_integer(lua_program * program) {
+  int64_t res = 0;
+
+  for (uint16_t index = 0; index < LUA_INTEGER_SIZE; ++index) {
+    res += (((int64_t) read_byte(program)) << (8 * index));
+  }
 
   return res;
 }
@@ -74,8 +86,33 @@ static void read_constants(lua_program * program) {
   if (program->constants_count <= 0) return;
 
   skip_bytes(program, 1); // constant type
-  program->first_constant = read_int(program);
+  program->first_constant = read_lua_integer(program);
 }
+
+static void int64_to_str(char * str, int64_t val) {
+  char buffer[8];
+  uint16_t cursor = 0;
+  int64_t memo = val;
+  int64_t divided = 0;
+  int64_t divider = 1000000000000000000;
+
+  for (uint16_t index = 0; index < 19; ++index) {
+    divided = memo / divider;
+
+    if (divided > 0 || cursor > 0) {
+      sprintf(buffer, "%d", divided);
+      str[cursor] = buffer[0];
+      cursor++;
+    }
+
+    memo = memo - (divider * divided); 
+    divider = divider / 10;    
+  }
+
+
+  str[cursor] = '\0';
+}
+//9,223,372,036,854,775,807
 
 void moonchild_run(uint16_t luac, uint16_t luac_size) {
   lua_program * program = (lua_program *) malloc(sizeof(lua_program));
@@ -103,7 +140,9 @@ void moonchild_run(uint16_t luac, uint16_t luac_size) {
 
   char buffer[255];
 
-  sprintf(buffer, "%d", program->first_constant);
+  //sprintf(buffer, "%d", program->first_constant / 100000000000);
+
+  int64_to_str(buffer, program->first_constant);
 
 
   while(1) {
