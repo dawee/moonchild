@@ -1,5 +1,6 @@
 #include "moonchild.h"
 #include "Arduboy.h"
+#include <avr/pgmspace.h>
 #include <stdlib.h>
 #include <stdio.h>
 
@@ -11,31 +12,31 @@ typedef struct {
 } lua_instruction;
 
 typedef struct {
-  unsigned luac_size;
-  unsigned char * luac;
-  unsigned cursor;
-  unsigned top_func_name_size;
+  uint16_t luac_size;
+  uint16_t luac;
+  uint16_t cursor;
+  uint16_t top_func_name_size;
   char * top_func_name;
-  unsigned instructions_count;
+  uint16_t instructions_count;
   lua_instruction * instructions;
-  unsigned constants_count;
-  unsigned first_constant;
+  uint16_t constants_count;
+  uint16_t first_constant;
 } lua_program;
 
 
 static unsigned char read_byte(lua_program * program) {
-  unsigned char byte = program->luac[program->cursor];
+  unsigned char byte = pgm_read_byte_near((program->luac) + (program->cursor));
 
   program->cursor++;
   return byte;
 }
 
-static skip_bytes(lua_program * program, unsigned size) {
+static skip_bytes(lua_program * program, uint16_t size) {
   program->cursor += size;
 }
 
-static void read_literal(lua_program * program, char * output, unsigned size) {
-  for (unsigned index = 0; index < size; ++index) {
+static void read_literal(lua_program * program, char * output, uint16_t size) {
+  for (uint16_t index = 0; index < size; ++index) {
     output[index] = (char *) read_byte(program);
   }
 
@@ -43,7 +44,7 @@ static void read_literal(lua_program * program, char * output, unsigned size) {
 }
 
 static void read_top_func_name(lua_program * program) {
-  program->top_func_name_size = (unsigned) read_byte(program) - 1;
+  program->top_func_name_size = (uint16_t) read_byte(program) - 1;
   program->top_func_name = (char *) malloc(program->top_func_name_size + 1);
 
   read_literal(program, program->top_func_name, program->top_func_name_size);  
@@ -61,7 +62,7 @@ static void read_code(lua_program * program) {
   program->instructions_count = read_int(program);
   program->instructions = (lua_instruction *) malloc(program->instructions_count * sizeof(lua_instruction));
 
-  for (unsigned index = 0; index < program->instructions_count; ++index) {
+  for (uint16_t index = 0; index < program->instructions_count; ++index) {
     program->instructions[index].opcode = read_byte(program);
     skip_bytes(program, 3);
   }
@@ -76,7 +77,7 @@ static void read_constants(lua_program * program) {
   program->first_constant = read_int(program);
 }
 
-void moonchild_run(unsigned char * luac, unsigned luac_size) {
+void moonchild_run(uint16_t luac, uint16_t luac_size) {
   lua_program * program = (lua_program *) malloc(sizeof(lua_program));
 
   program->luac = luac;
@@ -102,7 +103,7 @@ void moonchild_run(unsigned char * luac, unsigned luac_size) {
 
   char buffer[255];
 
-  sprintf(buffer, "constant = %d", program->first_constant);
+  sprintf(buffer, "%d", program->first_constant);
 
 
   while(1) {

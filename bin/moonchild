@@ -87,8 +87,9 @@ const template = buf => `
  */ 
 
 #include "moonchild.h"
+#include <avr/pgmspace.h>
 
-static unsigned char lua_program[] = {
+const PROGMEM unsigned char lua_program[] = {
 ${(!!buf ? [...buf.entries()] : []).map(
   ([index, val]) => `  0x${val.toString(16)}`
 ).join(',\n')}
