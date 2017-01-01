@@ -93,7 +93,14 @@ static void read_constants(lua_program * program) {
 }
 
 static void int64_to_str(char * str, int64_t val) {
-  char buffer[8];
+  char buffer[32];
+
+  if (val < 0) {
+    int64_to_str(buffer, -val);
+    sprintf(str, "-%s", buffer);
+    return;
+  }
+
   uint16_t cursor = 0;
   int64_t memo = val;
   int64_t divided = 0;
@@ -114,7 +121,7 @@ static void int64_to_str(char * str, int64_t val) {
 
   str[cursor] = '\0';
 }
-//9,223,372,036,854,775,807
+
 
 void moonchild_run(uint16_t luac, uint16_t luac_size) {
   lua_program * program = (lua_program *) malloc(sizeof(lua_program));
@@ -143,7 +150,7 @@ void moonchild_run(uint16_t luac, uint16_t luac_size) {
   char buffer[255];
 
 
-  int64_to_str(buffer, program->constants[0] + program->constants[1]);
+  int64_to_str(buffer, program->constants[0]);
 
 
   while(1) {
