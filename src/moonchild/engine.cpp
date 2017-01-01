@@ -26,6 +26,7 @@ typedef struct {
   lua_instruction * instructions;
   uint16_t constants_count;
   int64_t * constants;
+  int64_t registers[32];
 } lua_program;
 
 
@@ -140,6 +141,33 @@ static void int64_to_str(char * str, int64_t val) {
   str[cursor] = '\0';
 }
 
+static exec_program(lua_program * program) {
+  for (uint16_t index = 0; index < program->instructions_count; ++index) {
+    lua_instruction instruction = program->instructions[index];
+
+    switch(instruction.opcode) {
+      case OPCODE_LOADK:
+        program->registers[instruction.a] = program->constants[instruction.b];
+        break;
+
+      case OPCODE_ADD:
+        program->registers[instruction.a] = program->registers[instruction.b] + program->registers[instruction.c];
+        break;
+
+      case OPCODE_SUB:
+        program->registers[instruction.a] = program->registers[instruction.b] - program->registers[instruction.c];
+        break;
+
+      case OPCODE_MUL:
+        program->registers[instruction.a] = program->registers[instruction.b] * program->registers[instruction.c];
+        break;
+
+      default:
+        break;
+    };
+  }
+}
+
 
 void moonchild_run(uint16_t luac, uint16_t luac_size) {
   lua_program * program = (lua_program *) malloc(sizeof(lua_program));
@@ -165,10 +193,13 @@ void moonchild_run(uint16_t luac, uint16_t luac_size) {
   read_code(program);
   read_constants(program);
 
+
+  exec_program(program);
+
   char buffer[255];
 
 
-  sprintf(buffer, "ins[2](a/b) = %d,%d", program->instructions[2].a, program->instructions[2].b);
+  sprintf(buffer, "reg0 = %d", program->registers[0]);
 
 
   while(1) {
