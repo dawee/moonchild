@@ -18,7 +18,7 @@ const getBinDir = () => new Promise(
   resolve => exec(`npm --prefix ${path.join(__dirname, '..')} bin`, (err, out) => resolve(out.replace(/\s+/g, '')))
 );
 
-const writeSketch = (filename, buf) => new Promise(
+const writeTemplate = (template, filename, buf) => new Promise(
   (resolve, reject) => fs.writeFile(filename, template(buf), err => {
     if (!!err) return reject(err);
 
@@ -50,7 +50,7 @@ const copyTree = (src, dst) => new Promise(
   })
 );
 
-const template = buf => `
+const sketchTemplate = buf => `
 /*
  * 
  * 
@@ -87,23 +87,35 @@ const template = buf => `
  */
 
 #include "moonchild.h"
-#include <avr/pgmspace.h>
-
-const moon_prototype prototype PROGMEM = {
-  .func_name_size = 10,
-  .func_name = "locala.lua",
-  .instructions_count = 0,
-  .instructions = {},
-  .constants_count = 0,
-  .constants = {},
-};
 
 void setup() {
+  moon_run_generated();
 }
 
-void loop() {
-}
+void loop() {}
+`;
 
+const programTemplate = buf => `
+#include "moonchild.h"
+
+const char locala_func_name[] PROGMEM = "locala.lua";
+
+const moon_instruction locala_instructions[] PROGMEM = {
+  {.opcode = OPCODE_LOADNIL, .a = 0},
+  {.opcode = OPCODE_RETURN},
+};
+
+const moon_prototype locala_prototype PROGMEM = {
+  .func_name_size = 10,
+  .func_name_addr = (PGMEM_ADDRESS) locala_func_name,
+  .instructions_count = 2,
+  .instructions_addr = (PGMEM_ADDRESS) locala_instructions,
+  .constants_count = 0,
+};
+
+void moon_run_generated() {
+  moon_arch_run((PGMEM_ADDRESS) &locala_prototype);
+}
 `;
 
 
@@ -128,6 +140,7 @@ if (!fs.existsSync(filename)) {
 const basename = path.basename(filename, '.lua');
 const buildpath = path.join(path.dirname(filename), 'build', basename);
 const sketchname = path.join(buildpath, `${basename}.ino`);
+const programname = path.join(buildpath, `program.cpp`);
 const luacTMP = path.join(os.tmpdir(), hat());
 const libSRC = path.join(__dirname, '..', 'src', 'moonchild');
 const libDST = path.join(buildpath); 
@@ -140,7 +153,9 @@ mkdirp(buildpath)
   .catch(err => console.error('Error : Failed copy moonchild lib\n', err))
   .then(() => readLuacBuffer(luacTMP))
   .catch(err => console.error('Error : Failed to read luac output\n', err))
-  .then(buf => writeSketch(sketchname, buf))
+  .then(buf => writeTemplate(programTemplate, programname, buf))
+  .catch(err => console.error('Error : Failed to write program\n', err))
+  .then(buf => writeTemplate(sketchTemplate, sketchname, buf))
   .catch(err => console.error('Error : Failed to write sketch\n', err))
   .then(() => 'Build done.')
 
