@@ -2,7 +2,7 @@
   "name": "moonchild",
   "version": "1.0.0",
   "description": "",
-  "main": "lib/moonchild.js",
+  "main": "bin/moonchild",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1"
   },
