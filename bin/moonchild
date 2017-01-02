@@ -84,7 +84,19 @@ const template = buf => `
  *                                  jt  ii   ii    E#t :W##########Wt E##D.       
  *                                                 ,;. :,,,,,,,,,,,,,.E#t         
  *                                                                    L:          
- */ 
+ */
+
+#include "moonchild.h"
+#include <avr/pgmspace.h>
+
+const moon_prototype prototype PROGMEM = {
+  .func_name_size = 10,
+  .func_name = "locala.lua",
+  .instructions_count = 0,
+  .instructions = {},
+  .constants_count = 0,
+  .constants = {},
+};
 
 void setup() {
 }
