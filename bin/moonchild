@@ -101,23 +101,30 @@ const programTemplate = buf => `
 const char locala_func_name[] PROGMEM = "locala.lua";
 
 const moon_instruction locala_instructions[] PROGMEM = {
-  {.opcode = OPCODE_LOADNIL, .a = 0},
+  {.opcode = OPCODE_LOADK, .a = 0, .b = 0},
+  {.opcode = OPCODE_LOADK, .a = 1, .b = 1},
+  {.opcode = OPCODE_ADD, .a = 0, .b = 0, .c = 1},
   {.opcode = OPCODE_RETURN},
+};
+
+const uint64_t locala_constants[] PROGMEM = {
+  20,
+  22,
 };
 
 const moon_prototype locala_prototype PROGMEM = {
   .func_name_size = 10,
   .func_name_addr = (PGMEM_ADDRESS) locala_func_name,
-  .instructions_count = 2,
+  .instructions_count = 4,
   .instructions_addr = (PGMEM_ADDRESS) locala_instructions,
-  .constants_count = 0,
+  .constants_count = 2,
+  .constants_addr = (PGMEM_ADDRESS) locala_constants,
 };
 
 void moon_run_generated() {
   moon_arch_run((PGMEM_ADDRESS) &locala_prototype);
 }
 `;
-
 
 
 

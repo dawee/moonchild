@@ -3,6 +3,8 @@
 
 #include <stdint.h>
 
+#define MOON_MAX_REGISTERS 10
+
 #ifndef MOONCHILD_SIMULATOR
   #include <avr/pgmspace.h>
   typedef uint16_t PGMEM_ADDRESS;
@@ -79,6 +81,11 @@ typedef struct {
   uint16_t constants_count;
   PGMEM_ADDRESS constants_addr;
 } moon_prototype;
+
+typedef struct {
+  moon_prototype * prototype;
+  uint64_t registers[MOON_MAX_REGISTERS];
+} moon_closure;
 
 
 void moon_run_generated();
