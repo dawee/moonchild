@@ -16,7 +16,7 @@
 #endif
 
 
-enum OPCODES {
+enum MOON_OPCODES {
   OPCODE_MOVE,
   OPCODE_LOADK,
   OPCODE_LOADKX,
@@ -65,6 +65,18 @@ enum OPCODES {
   OPCODE_VARARG,
   OPCODE_EXTRAARG
 };
+
+enum MOON_TYPES {
+  LUA_NIL,
+  LUA_INT,
+  LUA_NUMBER,
+  LUA_STRING,
+};
+
+typedef struct {
+  uint8_t type;
+  PGMEM_ADDRESS data_addr;
+} moon_value;
 
 typedef struct {
   uint8_t opcode;

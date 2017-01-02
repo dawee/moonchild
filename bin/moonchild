@@ -106,9 +106,13 @@ ${proto.instructions.map(
 ).join('\n')}
 };
 
-const uint64_t ${proto.baseName}_constants[] PROGMEM = {
 ${proto.constants.map(
-  constant => `  ${constant},`
+  (constant, i) => `const int32_t ${proto.baseName}_constants_value_${i} PROGMEM = ${constant};`
+).join('\n')}
+
+const moon_value ${proto.baseName}_constants[] PROGMEM = {
+${proto.constants.map(
+  (constant, i) => `  {.type = LUA_INT, .data_addr = (PGMEM_ADDRESS) &${proto.baseName}_constants_value_${i}},`
 ).join('\n')}
 };
 

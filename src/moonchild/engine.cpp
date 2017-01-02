@@ -19,12 +19,22 @@ static void read_instruction(moon_instruction * instruction, moon_prototype * pr
   progmem_cpy(instruction, prototype->instructions_addr, sizeof(moon_instruction), sizeof(moon_instruction) * index);
 }
 
-static uint64_t read_constant(moon_prototype * prototype, uint16_t index) {
-  uint64_t constant;
+static int32_t read_int_value(moon_value * value) {
+  int32_t data;
+  progmem_cpy(&data, value->data_addr, sizeof(int32_t));
 
-  progmem_cpy(&constant, prototype->constants_addr, sizeof(uint64_t), sizeof(uint64_t) * index);
+  return data;
+}
 
-  return constant;
+static int32_t read_constant(moon_prototype * prototype, uint16_t index) {
+  moon_value value;
+  int32_t data = 0;
+
+  progmem_cpy(&value, prototype->constants_addr, sizeof(moon_value), sizeof(moon_value) * index);
+
+  if (value.type == LUA_INT) data = read_int_value(&value);
+
+  return data;
 }
 
 static void run_instruction(moon_closure * closure, uint16_t index) {
