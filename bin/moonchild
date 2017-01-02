@@ -7,6 +7,7 @@ const hat = require('hat');
 const path = require('path');
 const ncp = require('ncp');
 const {exec} = require('child_process');
+const binary = require('binary-parser');
 const _mkdirp = require('mkdirp');
 
 const filename = argv._[0];
@@ -107,12 +108,12 @@ ${proto.instructions.map(
 };
 
 ${proto.constants.map(
-  (constant, i) => `const int32_t ${proto.baseName}_constants_value_${i} PROGMEM = ${constant};`
+  (constant, i) => `const ${constant.ctype} ${proto.baseName}_constants_value_${i} PROGMEM = ${constant.data};`
 ).join('\n')}
 
 const moon_value ${proto.baseName}_constants[] PROGMEM = {
 ${proto.constants.map(
-  (constant, i) => `  {.type = LUA_INT, .data_addr = (PGMEM_ADDRESS) &${proto.baseName}_constants_value_${i}},`
+  (constant, i) => `  {.type = ${constant.type}, .data_addr = (PGMEM_ADDRESS) &${proto.baseName}_constants_value_${i}},`
 ).join('\n')}
 };
 
@@ -132,6 +133,7 @@ void moon_run_generated() {
 
 const INT_SIZE = 4;
 const LUA_INTEGER_SIZE = 8;
+const LUA_NUMBER_SIZE = 8;
 
 const OPCODES_NAMES = [
   'OPCODE_MOVE',
@@ -226,7 +228,7 @@ class LuacParser {
       res += (this.readByte() << (8 * index));
     }
 
-    return res;    
+    return res;
   }
 
   readInt() {
@@ -260,13 +262,42 @@ class LuacParser {
     }
   }
 
+  readLuaNumber() {
+    const bytes = [];
+
+    for (let index = 0; index < LUA_NUMBER_SIZE; ++index) {
+      bytes.push(this.readByte());
+    }
+
+    const buf = new Buffer(bytes);
+    const binParser = new binary.Parser().doublele('number');
+
+    return binParser.parse(buf).number;
+  }
+
   readConstants() {
     this.proto.constantsCount = this.readInt();
     this.proto.constants = [];
 
     for (let index = 0; index < this.proto.constantsCount; ++index) {
-      this.skipBytes(1);  // type
-      this.proto.constants.push(this.readLuaInteger());
+      const type = this.readByte();
+
+      this.proto.constants.push({
+        type: {
+          3: 'LUA_NUMBER',
+          4: 'LUA_STRING',
+          19: 'LUA_INT',
+        }[type],
+        ctype: {
+          3: 'float',
+          4: 'char *',
+          19: 'int32_t',
+        }[type],
+        data:  {
+          3: () => this.readLuaNumber(),
+          19: () => this.readLuaInteger(),
+        }[type]()
+      });
     }
   }
 

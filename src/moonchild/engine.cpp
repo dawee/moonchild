@@ -26,13 +26,29 @@ static int32_t read_int_value(moon_value * value) {
   return data;
 }
 
-static int32_t read_constant(moon_prototype * prototype, uint16_t index) {
+static float read_number_value(moon_value * value) {
+  float data;
+  progmem_cpy(&data, value->data_addr, sizeof(float));
+
+  return data;
+}
+
+static float read_constant(moon_prototype * prototype, uint16_t index) {
   moon_value value;
-  int32_t data = 0;
+  float data = 0;
 
   progmem_cpy(&value, prototype->constants_addr, sizeof(moon_value), sizeof(moon_value) * index);
 
-  if (value.type == LUA_INT) data = read_int_value(&value);
+  switch(value.type) {
+    case LUA_NUMBER:
+      data = (float) read_number_value(&value);
+      break;
+    case LUA_INT:
+      data = (float) read_int_value(&value);
+      break;
+    default:
+      break;
+  }
 
   return data;
 }
@@ -75,5 +91,5 @@ void moon_run(PGMEM_ADDRESS prototype_addr, char * result) {
     run_instruction(&closure, index);
   }
 
-  sprintf(result, "reg0 = %d", (int) closure.registers[0]);
+  sprintf(result, "reg0 = %f", closure.registers[0]);
 }
