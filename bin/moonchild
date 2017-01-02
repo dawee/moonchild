@@ -86,18 +86,12 @@ const template = buf => `
  *                                                                    L:          
  */ 
 
-#include "moonchild.h"
-#include <avr/pgmspace.h>
-
-const PROGMEM unsigned char lua_program[] = {
-${(!!buf ? [...buf.entries()] : []).map(
-  ([index, val]) => `  0x${val.toString(16)}`
-).join(',\n')}
-};
-
 void setup() {
-  moonchild_run(lua_program, ${buf.length});
 }
+
+void loop() {
+}
+
 `;
 
 
