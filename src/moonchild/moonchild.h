@@ -96,7 +96,7 @@ typedef struct {
 
 typedef struct {
   moon_prototype * prototype;
-  float registers[MOON_MAX_REGISTERS];
+  int8_t registers[MOON_MAX_REGISTERS];
 } moon_closure;
 
 
