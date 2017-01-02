@@ -54,6 +54,7 @@ static int32_t read_constant(moon_prototype * prototype, uint16_t index) {
 }
 
 static void run_instruction(moon_closure * closure, uint16_t index) {
+  int8_t ccc;
   moon_instruction instruction;
 
   read_instruction(&instruction, closure->prototype, index);
@@ -64,9 +65,15 @@ static void run_instruction(moon_closure * closure, uint16_t index) {
       break;
 
     case OPCODE_ADD:
-      closure->registers[instruction.a] = closure->registers[instruction.b] + closure->registers[instruction.c];
-      break;
+      ccc = instruction.c & 0x7F;
 
+      if (instruction.c & 0x80 == 0x80) {
+        closure->registers[instruction.a] = closure->registers[instruction.b] + read_constant(closure->prototype, ccc);
+      } else {
+        closure->registers[instruction.a] = closure->registers[instruction.b] + closure->registers[ccc];
+      }
+
+      break;
     case OPCODE_SUB:
       closure->registers[instruction.a] = closure->registers[instruction.b] - closure->registers[instruction.c];
       break;
