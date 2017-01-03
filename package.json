@@ -18,9 +18,9 @@
   "homepage": "https://github.com/dawee/moonchild#readme",
   "dependencies": {
     "binary-parser": "1.1.5",
+    "commander": "2.9.0",
     "hat": "0.0.3",
     "luac-5.3.3-prebuilt-linux-x86_64": "1.0.0",
-    "minimist": "1.2.0",
     "mkdirp": "0.5.1",
     "ncp": "2.0.0"
   }

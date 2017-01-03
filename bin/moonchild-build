@@ -1,0 +1,55 @@
+#!/usr/bin/env node
+
+const program = require('commander');
+
+program
+  .usage('<LUA FILE>')
+  .parse(process.argv);
+
+const os = require('os');
+const fs = require('fs');
+const hat = require('hat');
+const path = require('path');
+const ncp = require('ncp');
+const _mkdirp = require('mkdirp');
+const {exec} = require('child_process');
+const sketchTemplate = require('../lib/template/sketch');
+const programTemplate = require('../lib/template/program');
+const actions = require('../lib/actions');
+const {LuacParser} = require('../lib/parser');
+
+const filename = program.args[0];
+
+
+if (!filename) {
+  console.log('usage: moonchild <LUA FILE>');
+  process.exit(1);
+}
+
+
+if (!fs.existsSync(filename)) {
+  console.error(`"${filename}"" does not exist`);
+  process.exit(1);  
+}
+
+const basename = path.basename(filename, '.lua');
+const buildpath = path.join(path.dirname(filename), 'build', basename);
+const sketchname = path.join(buildpath, `${basename}.ino`);
+const programname = path.join(buildpath, `program.cpp`);
+const luacTMP = path.join(os.tmpdir(), hat());
+const libSRC = path.join(__dirname, '..', 'src', 'moonchild');
+const libDST = path.join(buildpath); 
+
+
+actions.mkdirp(buildpath)
+  .then(() => actions.luac(filename, luacTMP))
+  .catch(err => console.error('Error : Failed to compile Lua script\n', err))
+  .then(() => actions.copyTree(libSRC, libDST))
+  .catch(err => console.error('Error : Failed copy moonchild lib\n', err))
+  .then(() => actions.readLuacBuffer(luacTMP))
+  .catch(err => console.error('Error : Failed to read luac output\n', err))
+  .then(proto => actions.writeTemplate(programTemplate, programname, proto))
+  .catch(err => console.error('Error : Failed to write program\n', err))
+  .then(() => actions.writeTemplate(sketchTemplate, sketchname))
+  .catch(err => console.error('Error : Failed to write sketch\n', err))
+
