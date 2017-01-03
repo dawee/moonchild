@@ -13,7 +13,7 @@ const filename = program.args[0];
 
 
 if (!filename) {
-  console.log('usage: moonchild <LUA FILE>');
+  console.error('no lua script given');
   process.exit(1);
 }
 
