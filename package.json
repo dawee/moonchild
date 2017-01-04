@@ -18,7 +18,6 @@
   "homepage": "https://github.com/dawee/moonchild#readme",
   "dependencies": {
     "bignum": "0.12.5",
-    "binary": "0.3.0",
     "commander": "2.9.0",
     "hat": "0.0.3",
     "luac-5.3.3-prebuilt-linux-x86_64": "1.0.0",
