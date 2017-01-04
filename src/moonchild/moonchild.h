@@ -5,6 +5,10 @@
 
 #define MOON_MAX_REGISTERS 10
 
+#define OPBK_FLAG 0b00000001
+#define OPCK_FLAG 0b00000010
+
+
 #ifndef MOONCHILD_SIMULATOR
   #include <avr/pgmspace.h>
   typedef uint16_t PGMEM_ADDRESS;
@@ -80,9 +84,10 @@ typedef struct {
 
 typedef struct {
   uint8_t opcode;
-  uint16_t a;
+  uint8_t a;
   uint32_t b;
-  uint16_t c;
+  uint8_t c;
+  uint8_t flag;
 } moon_instruction;
 
 typedef struct {

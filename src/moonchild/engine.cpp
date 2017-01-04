@@ -54,7 +54,6 @@ static int32_t read_constant(moon_prototype * prototype, uint16_t index) {
 }
 
 static void run_instruction(moon_closure * closure, uint16_t index) {
-  int8_t ccc;
   moon_instruction instruction;
 
   read_instruction(&instruction, closure->prototype, index);
@@ -65,21 +64,43 @@ static void run_instruction(moon_closure * closure, uint16_t index) {
       break;
 
     case OPCODE_ADD:
-      ccc = instruction.c & 0x7F;
-
-      if (instruction.c & 0x80 == 0x80) {
-        closure->registers[instruction.a] = closure->registers[instruction.b] + read_constant(closure->prototype, ccc);
+      if ((instruction.flag & OPCK_FLAG) == OPCK_FLAG) {
+        closure->registers[instruction.a] = closure->registers[instruction.b] + read_constant(closure->prototype, instruction.c);
+      } else if ((instruction.flag & OPBK_FLAG) == OPBK_FLAG) {
+        closure->registers[instruction.a] = read_constant(closure->prototype, instruction.b) + closure->registers[instruction.c];
       } else {
-        closure->registers[instruction.a] = closure->registers[instruction.b] + closure->registers[ccc];
+        closure->registers[instruction.a] = closure->registers[instruction.b] + closure->registers[instruction.c];
       }
 
       break;
     case OPCODE_SUB:
-      closure->registers[instruction.a] = closure->registers[instruction.b] - closure->registers[instruction.c];
+      if ((instruction.flag & OPCK_FLAG) == OPCK_FLAG) {
+        closure->registers[instruction.a] = closure->registers[instruction.b] - read_constant(closure->prototype, instruction.c);
+      } else if ((instruction.flag & OPBK_FLAG) == OPBK_FLAG) {
+        closure->registers[instruction.a] = read_constant(closure->prototype, instruction.b) - closure->registers[instruction.c];
+      } else {
+        closure->registers[instruction.a] = closure->registers[instruction.b] - closure->registers[instruction.c];
+      }
       break;
 
     case OPCODE_MUL:
-      closure->registers[instruction.a] = closure->registers[instruction.b] * closure->registers[instruction.c];
+      if ((instruction.flag & OPCK_FLAG) == OPCK_FLAG) {
+        closure->registers[instruction.a] = closure->registers[instruction.b] * read_constant(closure->prototype, instruction.c);
+      } else if ((instruction.flag & OPBK_FLAG) == OPBK_FLAG) {
+        closure->registers[instruction.a] = read_constant(closure->prototype, instruction.b) * closure->registers[instruction.c];
+      } else {
+        closure->registers[instruction.a] = closure->registers[instruction.b] * closure->registers[instruction.c];
+      }
+      break;
+
+    case OPCODE_DIV:
+      if ((instruction.flag & OPCK_FLAG) == OPCK_FLAG) {
+        closure->registers[instruction.a] = closure->registers[instruction.b] / read_constant(closure->prototype, instruction.c);
+      } else if ((instruction.flag & OPBK_FLAG) == OPBK_FLAG) {
+        closure->registers[instruction.a] = read_constant(closure->prototype, instruction.b) / closure->registers[instruction.c];
+      } else {
+        closure->registers[instruction.a] = closure->registers[instruction.b] / closure->registers[instruction.c];
+      }
       break;
 
     default:
