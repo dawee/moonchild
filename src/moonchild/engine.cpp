@@ -20,6 +20,18 @@ static moon_prototype * create_prototype() {
   return (moon_prototype *) malloc(sizeof(moon_prototype));
 }
 
+static void set_to_nil(moon_reference * reference) {
+  reference->progmem = TRUE;
+  reference->value_addr = (SRAM_ADDRESS) &MOON_NIL_VALUE;
+}
+
+static void create_register(moon_closure * closure, uint16_t index) {
+  if (closure->registers[index] != NULL) return;
+
+  closure->registers[index] = (moon_reference *) malloc(sizeof(moon_reference));
+  set_to_nil(closure->registers[index]);
+}
+
 static void init_registers(moon_closure * closure) {
   for (uint16_t index = 0; index < MOON_MAX_REGISTERS; ++index) {
     closure->registers[index] = NULL;
@@ -35,6 +47,7 @@ static void init_closure(moon_closure * closure, PGMEM_ADDRESS prototype_addr) {
   init_prototype(closure->prototype, prototype_addr);
   init_registers(closure);
 }
+
 
 static void read_instruction(moon_instruction * instruction, moon_prototype * prototype, uint16_t index) {
   progmem_cpy(instruction, prototype->instructions_addr, sizeof(moon_instruction), sizeof(moon_instruction) * index);
@@ -64,5 +77,12 @@ void moon_run(PGMEM_ADDRESS prototype_addr, char * result) {
     run_instruction(closure, index);
   }
 
-  sprintf(result, "bee bop");
+  create_register(closure, 0);
+
+  if (closure->registers[0]->progmem == TRUE) {
+    sprintf(result, "yay");
+  } else {
+    sprintf(result, "too bad");
+  }
+
 }
