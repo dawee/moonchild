@@ -93,21 +93,6 @@ typedef struct {
 } moon_value;
 
 typedef struct {
-  uint8_t type = LUA_NIL;
-  uint16_t nodes = 0;
-} moon_nil_value;
-
-typedef struct {
-  uint8_t type = LUA_TRUE;
-  uint16_t nodes = 0;
-} moon_true_value;
-
-typedef struct {
-  uint8_t type = LUA_FALSE;
-  uint16_t nodes = 0;
-} moon_false_value;
-
-typedef struct {
   uint8_t type;
   uint16_t nodes;
   int16_t val;
@@ -153,9 +138,9 @@ typedef struct {
 } moon_closure;
 
 
-const moon_nil_value MOON_NIL_VALUE PROGMEM;
-const moon_true_value MOON_TRUE_VALUE PROGMEM;
-const moon_false_value MOON_FALSE_VALUE PROGMEM;
+const moon_value MOON_NIL_VALUE PROGMEM = {.type = LUA_NIL, .nodes = 1};
+const moon_value MOON_TRUE_VALUE PROGMEM = {.type = LUA_TRUE, .nodes = 1};
+const moon_value MOON_FALSE_VALUE PROGMEM = {.type = LUA_FALSE, .nodes = 1};
 
 
 void moon_run_generated();
