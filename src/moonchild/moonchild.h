@@ -8,6 +8,14 @@
 #define OPBK_FLAG 0b00000001
 #define OPCK_FLAG 0b00000010
 
+typedef void * SRAM_ADDRESS;
+
+#ifndef BOOL
+  typedef uint8_t BOOL;
+
+  enum BOOL_VALUES {FALSE, TRUE};
+#endif
+
 
 #ifndef MOONCHILD_SIMULATOR
   #include <avr/pgmspace.h>
@@ -72,6 +80,8 @@ enum MOON_OPCODES {
 
 enum MOON_TYPES {
   LUA_NIL,
+  LUA_TRUE,
+  LUA_FALSE,
   LUA_INT,
   LUA_NUMBER,
   LUA_STRING,
@@ -79,8 +89,41 @@ enum MOON_TYPES {
 
 typedef struct {
   uint8_t type;
-  PGMEM_ADDRESS data_addr;
+  uint16_t nodes;
 } moon_value;
+
+typedef struct {
+  uint8_t type = LUA_NIL;
+  uint16_t nodes = 0;
+} moon_nil_value;
+
+typedef struct {
+  uint8_t type = LUA_TRUE;
+  uint16_t nodes = 0;
+} moon_true_value;
+
+typedef struct {
+  uint8_t type = LUA_FALSE;
+  uint16_t nodes = 0;
+} moon_false_value;
+
+typedef struct {
+  uint8_t type;
+  uint16_t nodes;
+  int16_t val;
+} moon_int_value;
+
+typedef struct {
+  uint8_t type;
+  uint16_t nodes;
+  float val;
+} moon_number_value;
+
+typedef struct {
+  uint8_t type;
+  uint16_t nodes;
+  char * str;
+} moon_string_value;
 
 typedef struct {
   uint8_t opcode;
@@ -89,6 +132,11 @@ typedef struct {
   uint8_t c;
   uint8_t flag;
 } moon_instruction;
+
+typedef struct {
+  BOOL progmem;
+  SRAM_ADDRESS value_addr;
+} moon_reference;
 
 typedef struct {
   uint16_t func_name_size;
@@ -101,8 +149,13 @@ typedef struct {
 
 typedef struct {
   moon_prototype * prototype;
-  int8_t registers[MOON_MAX_REGISTERS];
+  moon_reference registers[MOON_MAX_REGISTERS];
 } moon_closure;
+
+
+const moon_nil_value MOON_NIL_VALUE PROGMEM;
+const moon_true_value MOON_TRUE_VALUE PROGMEM;
+const moon_false_value MOON_FALSE_VALUE PROGMEM;
 
 
 void moon_run_generated();

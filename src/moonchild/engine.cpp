@@ -19,39 +19,7 @@ static void read_instruction(moon_instruction * instruction, moon_prototype * pr
   progmem_cpy(instruction, prototype->instructions_addr, sizeof(moon_instruction), sizeof(moon_instruction) * index);
 }
 
-static int32_t read_int_value(moon_value * value) {
-  int32_t data;
-  progmem_cpy(&data, value->data_addr, sizeof(int32_t));
 
-  return data;
-}
-
-static float read_number_value(moon_value * value) {
-  float data;
-  progmem_cpy(&data, value->data_addr, sizeof(float));
-
-  return data;
-}
-
-static int32_t read_constant(moon_prototype * prototype, uint16_t index) {
-  moon_value value;
-  int32_t data = 0;
-
-  progmem_cpy(&value, prototype->constants_addr, sizeof(moon_value), sizeof(moon_value) * index);
-
-  switch(value.type) {
-    case LUA_NUMBER:
-      data = (int32_t) read_number_value(&value);
-      break;
-    case LUA_INT:
-      data = read_int_value(&value);
-      break;
-    default:
-      break;
-  }
-
-  return data;
-}
 
 static void run_instruction(moon_closure * closure, uint16_t index) {
   moon_instruction instruction;
@@ -60,47 +28,6 @@ static void run_instruction(moon_closure * closure, uint16_t index) {
 
   switch(instruction.opcode) {
     case OPCODE_LOADK:
-      closure->registers[instruction.a] = read_constant(closure->prototype, instruction.b);
-      break;
-
-    case OPCODE_ADD:
-      if ((instruction.flag & OPCK_FLAG) == OPCK_FLAG) {
-        closure->registers[instruction.a] = closure->registers[instruction.b] + read_constant(closure->prototype, instruction.c);
-      } else if ((instruction.flag & OPBK_FLAG) == OPBK_FLAG) {
-        closure->registers[instruction.a] = read_constant(closure->prototype, instruction.b) + closure->registers[instruction.c];
-      } else {
-        closure->registers[instruction.a] = closure->registers[instruction.b] + closure->registers[instruction.c];
-      }
-
-      break;
-    case OPCODE_SUB:
-      if ((instruction.flag & OPCK_FLAG) == OPCK_FLAG) {
-        closure->registers[instruction.a] = closure->registers[instruction.b] - read_constant(closure->prototype, instruction.c);
-      } else if ((instruction.flag & OPBK_FLAG) == OPBK_FLAG) {
-        closure->registers[instruction.a] = read_constant(closure->prototype, instruction.b) - closure->registers[instruction.c];
-      } else {
-        closure->registers[instruction.a] = closure->registers[instruction.b] - closure->registers[instruction.c];
-      }
-      break;
-
-    case OPCODE_MUL:
-      if ((instruction.flag & OPCK_FLAG) == OPCK_FLAG) {
-        closure->registers[instruction.a] = closure->registers[instruction.b] * read_constant(closure->prototype, instruction.c);
-      } else if ((instruction.flag & OPBK_FLAG) == OPBK_FLAG) {
-        closure->registers[instruction.a] = read_constant(closure->prototype, instruction.b) * closure->registers[instruction.c];
-      } else {
-        closure->registers[instruction.a] = closure->registers[instruction.b] * closure->registers[instruction.c];
-      }
-      break;
-
-    case OPCODE_DIV:
-      if ((instruction.flag & OPCK_FLAG) == OPCK_FLAG) {
-        closure->registers[instruction.a] = closure->registers[instruction.b] / read_constant(closure->prototype, instruction.c);
-      } else if ((instruction.flag & OPBK_FLAG) == OPBK_FLAG) {
-        closure->registers[instruction.a] = read_constant(closure->prototype, instruction.b) / closure->registers[instruction.c];
-      } else {
-        closure->registers[instruction.a] = closure->registers[instruction.b] / closure->registers[instruction.c];
-      }
       break;
 
     default:
@@ -119,5 +46,5 @@ void moon_run(PGMEM_ADDRESS prototype_addr, char * result) {
     run_instruction(&closure, index);
   }
 
-  sprintf(result, "reg0 = %d", closure.registers[0]);
+  sprintf(result, "bee bop");
 }
