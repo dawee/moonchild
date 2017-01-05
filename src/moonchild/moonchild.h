@@ -134,7 +134,7 @@ typedef struct {
 
 typedef struct {
   moon_prototype * prototype;
-  moon_reference registers[MOON_MAX_REGISTERS];
+  SRAM_ADDRESS registers[MOON_MAX_REGISTERS];
 } moon_closure;
 
 
