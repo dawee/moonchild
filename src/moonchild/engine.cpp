@@ -25,6 +25,18 @@ static void set_to_nil(moon_reference * reference) {
   reference->value_addr = (SRAM_ADDRESS) &MOON_NIL_VALUE;
 }
 
+static void copy_reference(moon_reference * dest, moon_reference * src) {
+  dest->progmem = src->progmem;
+  dest->value_addr = src->value_addr;
+}
+
+static void load_constant(moon_reference * dest, moon_prototype * prototype, uint16_t index) {
+  moon_reference constant_reference;
+
+  progmem_cpy(&constant_reference, prototype->constants_addr, sizeof(constant_reference) * index);
+  copy_reference(dest, &constant_reference);
+}
+
 static void create_register(moon_closure * closure, uint16_t index) {
   if (closure->registers[index] != NULL) return;
 
