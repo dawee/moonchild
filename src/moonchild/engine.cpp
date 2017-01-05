@@ -30,10 +30,10 @@ static void copy_reference(moon_reference * dest, moon_reference * src) {
   dest->value_addr = src->value_addr;
 }
 
-static void load_constant(moon_reference * dest, moon_prototype * prototype, uint16_t index) {
+static void copy_constant_reference(moon_reference * dest, moon_prototype * prototype, uint16_t index) {
   moon_reference constant_reference;
 
-  progmem_cpy(&constant_reference, prototype->constants_addr, sizeof(constant_reference) * index);
+  progmem_cpy(&constant_reference, prototype->constants_addr, sizeof(moon_reference), sizeof(moon_reference) * index);
   copy_reference(dest, &constant_reference);
 }
 
@@ -72,6 +72,8 @@ static void run_instruction(moon_closure * closure, uint16_t index) {
 
   switch(instruction.opcode) {
     case OPCODE_LOADK:
+      create_register(closure, instruction.a);
+      copy_constant_reference(closure->registers[instruction.a], closure->prototype, instruction.b);
       break;
 
     default:
@@ -82,6 +84,7 @@ static void run_instruction(moon_closure * closure, uint16_t index) {
 
 void moon_run(PGMEM_ADDRESS prototype_addr, char * result) {
   moon_closure * closure = create_closure();
+  moon_int_value int_value;
 
   init_closure(closure, prototype_addr);
 
@@ -89,12 +92,15 @@ void moon_run(PGMEM_ADDRESS prototype_addr, char * result) {
     run_instruction(closure, index);
   }
 
-  create_register(closure, 0);
+  uint8_t type = (uint8_t) progmem_read(closure->registers[0]->value_addr, 0);
 
-  if (closure->registers[0]->progmem == TRUE) {
-    sprintf(result, "yay");
+  if (type == LUA_INT) {
+    progmem_cpy(&int_value, closure->registers[0]->value_addr, sizeof(moon_int_value));
+    sprintf(result, "%d\n", int_value.val);
+  } else if (type == LUA_NUMBER) {    
+    sprintf(result, "number type\n");
   } else {
-    sprintf(result, "too bad");
+    sprintf(result, "other type : %d\n", type);
   }
 
 }
