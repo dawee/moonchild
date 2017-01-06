@@ -182,6 +182,14 @@ static void prepare_op_bufs(moon_reference * buf1_ref, moon_reference * buf2_ref
   }
 }
 
+static void op_loadk(moon_instruction * instruction, moon_closure * closure) {
+  moon_reference const_ref;
+
+  create_register(closure, instruction->a);
+  read_constant_reference(&const_ref, closure->prototype, instruction->b);
+  copy_reference(closure->registers[instruction->a], &const_ref);
+}
+
 static void op_add(moon_instruction * instruction, moon_closure * closure) {
   moon_reference buf1_ref;
   moon_reference buf2_ref;
@@ -197,15 +205,12 @@ static void op_add(moon_instruction * instruction, moon_closure * closure) {
 
 static void run_instruction(moon_closure * closure, uint16_t index) {
   moon_instruction instruction;
-  moon_reference const_ref;
 
   read_instruction(&instruction, closure->prototype, index);
 
   switch(instruction.opcode) {
     case OPCODE_LOADK:
-      create_register(closure, instruction.a);
-      read_constant_reference(&const_ref, closure->prototype, instruction.b);
-      copy_reference(closure->registers[instruction.a], &const_ref);
+      op_loadk(&instruction, closure);
       break;
     case OPCODE_ADD:
       op_add(&instruction, closure);
