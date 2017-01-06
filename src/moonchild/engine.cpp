@@ -23,12 +23,17 @@ static moon_prototype * create_prototype() {
 static void delete_value(moon_value * value) {
   if (value == NULL) return;
 
+  if (value->type == LUA_STRING) {
+    // @TODO : free string
+  }
+
   free(value);
   value = NULL;
 }
 
 static void create_progmem_value_copy(moon_reference * dest, moon_reference * src) {
   uint8_t type = progmem_read(src->value_addr, 0);
+  moon_string_value string_value;
 
   switch(type) {
     case LUA_NIL:
@@ -330,8 +335,7 @@ static void run_instruction(moon_closure * closure, uint16_t index) {
 
 void moon_run(PGMEM_ADDRESS prototype_addr, char * result) {
   moon_closure * closure = create_closure();
-  moon_int_value int_value;
-  moon_number_value number_value;
+  moon_reference buf_ref;
 
   init_closure(closure, prototype_addr);
 
@@ -339,16 +343,15 @@ void moon_run(PGMEM_ADDRESS prototype_addr, char * result) {
     run_instruction(closure, index);
   }
 
-  uint8_t type = (uint8_t) progmem_read(closure->registers[0]->value_addr, 0);
+  create_value_copy(&buf_ref, closure->registers[0]);
 
-  if (type == LUA_INT) {
-    progmem_cpy(&int_value, closure->registers[0]->value_addr, sizeof(moon_int_value));
-    sprintf(result, "%d\n", int_value.val);
-  } else if (type == LUA_NUMBER) {    
-    progmem_cpy(&number_value, closure->registers[0]->value_addr, sizeof(moon_number_value));
-    sprintf(result, "~%d\n", (int)number_value.val);
+  if (((moon_value *) buf_ref.value_addr)->type == LUA_INT) {
+    sprintf(result, "%d\n", ((moon_int_value *) buf_ref.value_addr)->val);
+  } else if (((moon_value *) buf_ref.value_addr)->type == LUA_NUMBER) {
+    sprintf(result, "~%d\n", (int)(((moon_number_value *) buf_ref.value_addr)->val));
   } else {
-    sprintf(result, "other type : %d\n", type);
+    sprintf(result, "%s\n", (char *)(((moon_string_value *) buf_ref.value_addr)->string_addr));
   }
 
+  if (buf_ref.is_copy == TRUE) delete_value((moon_value *) buf_ref.value_addr);
 }
