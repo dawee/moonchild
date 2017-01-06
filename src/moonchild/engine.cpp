@@ -355,7 +355,15 @@ static void run_instruction(moon_closure * closure, uint16_t index) {
     case OPCODE_DIV:
       op_div(&instruction, closure);
       break;
+    case OPCODE_MOVE:
+      op_move(&instruction, closure);
+      break;
+    case OPCODE_RETURN:
+      // @TODO : manage return value
+      break;
+
     default:
+      moon_debug("unknown upcode : %d\n", instruction.opcode);
       break;
   };
 
