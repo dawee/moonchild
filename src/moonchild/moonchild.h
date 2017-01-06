@@ -22,10 +22,9 @@ typedef void * SRAM_ADDRESS;
   #include <avr/pgmspace.h>
   typedef uint16_t PGMEM_ADDRESS;
   #define progmem_read(X, Y) pgm_read_byte_near(X + Y)
-  #define moon_debug(...) printf(__VA_ARGS__)
 #else
   #define PROGMEM
-  #define moon_debug(...)
+  #define moon_debug(...) printf(__VA_ARGS__)
   typedef void * PGMEM_ADDRESS;
   char progmem_read(PGMEM_ADDRESS mem_addr, uint16_t offset);
 #endif

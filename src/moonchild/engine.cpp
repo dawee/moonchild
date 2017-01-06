@@ -56,8 +56,19 @@ static void create_progmem_value_copy(moon_reference * dest, moon_reference * sr
       dest->is_copy = TRUE;
       break;
 
+    case LUA_STRING:
+      dest->value_addr = (SRAM_ADDRESS) malloc(sizeof(moon_string_value));
+      progmem_cpy(dest->value_addr, src->value_addr, sizeof(moon_string_value));
+      string_value = *((moon_string_value *)(dest->value_addr));
+      string_value.string_addr = (SRAM_ADDRESS) malloc(string_value.length + 1);
+      progmem_cpy(string_value.string_addr, ((moon_string_value *)(src->value_addr))->string_addr, string_value.length);
+      ((char *) string_value.string_addr)[string_value.length] = '\0';
+
+      dest->is_copy = TRUE;
+      break;
+
     default:
-      moon_debug("error: could not copy unknown type : %d", type);
+      moon_debug("error: could not copy unknown type : %d\n", type);
       break;
   };
 }
@@ -116,17 +127,17 @@ static void init_closure(moon_closure * closure, PGMEM_ADDRESS prototype_addr) {
 
 static BOOL check_arithmetic_values(moon_value * valueA, moon_value * valueB) {
   if (valueA->type == LUA_NIL || valueB->type == LUA_NIL) {
-    moon_debug("error: try to perform arithmetic on a nil value");
+    moon_debug("error: try to perform arithmetic on a nil value\n");
     return FALSE;
   }
 
   if (valueA->type == LUA_TRUE || valueB->type == LUA_TRUE || valueA->type == LUA_FALSE || valueB->type == LUA_FALSE) {
-    moon_debug("error: try to perform arithmetic on a boolean value");
+    moon_debug("error: try to perform arithmetic on a boolean value\n");
     return FALSE;
   }
 
   if (valueA->type == LUA_STRING || valueB->type == LUA_STRING) {
-    moon_debug("error: try to perform arithmetic on a boolean value");
+    moon_debug("error: try to perform arithmetic on a boolean value\n");
     return FALSE;
   }
 
