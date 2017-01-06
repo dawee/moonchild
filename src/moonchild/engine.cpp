@@ -109,24 +109,30 @@ static void init_closure(moon_closure * closure, PGMEM_ADDRESS prototype_addr) {
   init_registers(closure);
 }
 
-static void create_sum_result(moon_reference * result, moon_value * valueA, moon_value * valueB) {
-  CTYPE_LUA_INT int_val;
-  CTYPE_LUA_NUMBER number_val;
-
+static BOOL check_arithmetic_values(moon_value * valueA, moon_value * valueB) {
   if (valueA->type == LUA_NIL || valueB->type == LUA_NIL) {
     moon_debug("error: try to perform arithmetic on a nil value");
-    return;
+    return FALSE;
   }
 
   if (valueA->type == LUA_TRUE || valueB->type == LUA_TRUE || valueA->type == LUA_FALSE || valueB->type == LUA_FALSE) {
     moon_debug("error: try to perform arithmetic on a boolean value");
-    return;
+    return FALSE;
   }
 
   if (valueA->type == LUA_STRING || valueB->type == LUA_STRING) {
     moon_debug("error: try to perform arithmetic on a boolean value");
-    return;
+    return FALSE;
   }
+
+  return TRUE;
+}
+
+static void create_sum_result(moon_reference * result, moon_value * valueA, moon_value * valueB) {
+  CTYPE_LUA_INT int_val;
+  CTYPE_LUA_NUMBER number_val;
+
+  if (check_arithmetic_values(valueA, valueB) == FALSE) return;
 
   if (valueA->type == LUA_INT && valueB->type == LUA_INT) {
     int_val = ((moon_int_value *) valueA)->val + ((moon_int_value *) valueB)->val;
