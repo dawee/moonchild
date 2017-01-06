@@ -85,6 +85,7 @@ static void run_instruction(moon_closure * closure, uint16_t index) {
 void moon_run(PGMEM_ADDRESS prototype_addr, char * result) {
   moon_closure * closure = create_closure();
   moon_int_value int_value;
+  moon_number_value number_value;
 
   init_closure(closure, prototype_addr);
 
@@ -98,7 +99,8 @@ void moon_run(PGMEM_ADDRESS prototype_addr, char * result) {
     progmem_cpy(&int_value, closure->registers[0]->value_addr, sizeof(moon_int_value));
     sprintf(result, "%d\n", int_value.val);
   } else if (type == LUA_NUMBER) {    
-    sprintf(result, "number type\n");
+    progmem_cpy(&number_value, closure->registers[0]->value_addr, sizeof(moon_number_value));
+    sprintf(result, "~%d\n", (int)number_value.val);
   } else {
     sprintf(result, "other type : %d\n", type);
   }
