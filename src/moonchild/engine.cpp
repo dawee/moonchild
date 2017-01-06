@@ -20,6 +20,10 @@ static moon_prototype * create_prototype() {
   return (moon_prototype *) malloc(sizeof(moon_prototype));
 }
 
+static void read_constant_reference(moon_reference * reference, moon_prototype * prototype, uint16_t index) {
+  progmem_cpy(reference, prototype->constants_addr, sizeof(moon_reference), sizeof(moon_reference) * index);
+}
+
 static void set_to_nil(moon_reference * reference) {
   reference->progmem = TRUE;
   reference->value_addr = (SRAM_ADDRESS) &MOON_NIL_VALUE;
@@ -33,7 +37,7 @@ static void copy_reference(moon_reference * dest, moon_reference * src) {
 static void copy_constant_reference(moon_reference * dest, moon_prototype * prototype, uint16_t index) {
   moon_reference constant_reference;
 
-  progmem_cpy(&constant_reference, prototype->constants_addr, sizeof(moon_reference), sizeof(moon_reference) * index);
+  read_constant_reference(&constant_reference, prototype, index);
   copy_reference(dest, &constant_reference);
 }
 
