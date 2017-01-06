@@ -125,18 +125,18 @@ static void init_closure(moon_closure * closure, PGMEM_ADDRESS prototype_addr) {
   init_registers(closure);
 }
 
-static BOOL check_arithmetic_values(moon_value * valueA, moon_value * valueB) {
-  if (valueA->type == LUA_NIL || valueB->type == LUA_NIL) {
+static BOOL check_arithmetic_values(moon_value * value_a, moon_value * value_b) {
+  if (value_a->type == LUA_NIL || value_b->type == LUA_NIL) {
     moon_debug("error: try to perform arithmetic on a nil value\n");
     return FALSE;
   }
 
-  if (valueA->type == LUA_TRUE || valueB->type == LUA_TRUE || valueA->type == LUA_FALSE || valueB->type == LUA_FALSE) {
+  if (value_a->type == LUA_TRUE || value_b->type == LUA_TRUE || value_a->type == LUA_FALSE || value_b->type == LUA_FALSE) {
     moon_debug("error: try to perform arithmetic on a boolean value\n");
     return FALSE;
   }
 
-  if (valueA->type == LUA_STRING || valueB->type == LUA_STRING) {
+  if (value_a->type == LUA_STRING || value_b->type == LUA_STRING) {
     moon_debug("error: try to perform arithmetic on a boolean value\n");
     return FALSE;
   }
@@ -144,8 +144,32 @@ static BOOL check_arithmetic_values(moon_value * valueA, moon_value * valueB) {
   return TRUE;
 }
 
-static void create_result_value(moon_reference * result, moon_value * valueA, moon_value * valueB, CTYPE_LUA_INT int_val, CTYPE_LUA_NUMBER number_val) {
-  if (valueA->type == LUA_NUMBER || valueB->type == LUA_NUMBER) {
+static BOOL check_literal_values(moon_value * value_a, moon_value * value_b) {
+  if (value_a->type == LUA_NIL || value_b->type == LUA_NIL) {
+    moon_debug("error: try to perform literal manipulation on a nil value\n");
+    return FALSE;
+  }
+
+  if (value_a->type == LUA_TRUE || value_b->type == LUA_TRUE || value_a->type == LUA_FALSE || value_b->type == LUA_FALSE) {
+    moon_debug("error: try to perform literal manipulation on a boolean value\n");
+    return FALSE;
+  }
+
+  if (value_a->type == LUA_INT || value_b->type == LUA_INT) {
+    moon_debug("error: try to perform literal manipulation on a integer value\n");
+    return FALSE;
+  }
+
+  if (value_a->type == LUA_NUMBER || value_b->type == LUA_NUMBER) {
+    moon_debug("error: try to perform literal manipulation on a integer value\n");
+    return FALSE;
+  }
+
+  return TRUE;
+}
+
+static void create_result_value(moon_reference * result, moon_value * value_a, moon_value * value_b, CTYPE_LUA_INT int_val, CTYPE_LUA_NUMBER number_val) {
+  if (value_a->type == LUA_NUMBER || value_b->type == LUA_NUMBER) {
     result->value_addr = (SRAM_ADDRESS) malloc(sizeof(moon_number_value));
     ((moon_number_value *) result->value_addr)->type = LUA_NUMBER;
     ((moon_number_value *) result->value_addr)->val = number_val;
@@ -162,82 +186,100 @@ static void read_instruction(moon_instruction * instruction, moon_prototype * pr
   progmem_cpy(instruction, prototype->instructions_addr, sizeof(moon_instruction), sizeof(moon_instruction) * index);
 }
 
-static void create_op_add_result(moon_reference * result, moon_value * valueA, moon_value * valueB) {
+static void create_op_add_result(moon_reference * result, moon_value * value_a, moon_value * value_b) {
   CTYPE_LUA_INT int_val;
   CTYPE_LUA_NUMBER number_val;
 
-  if (check_arithmetic_values(valueA, valueB) == FALSE) return;
+  if (check_arithmetic_values(value_a, value_b) == FALSE) return;
 
-  if (valueA->type == LUA_INT && valueB->type == LUA_INT) {
-    int_val = ((moon_int_value *) valueA)->val + ((moon_int_value *) valueB)->val;
-  } else if (valueA->type == LUA_INT && valueB->type == LUA_NUMBER) {
-    number_val = ((moon_int_value *) valueA)->val + ((moon_number_value *) valueB)->val;
-  } else if (valueA->type == LUA_NUMBER && valueB->type == LUA_INT) {
-    number_val = ((moon_number_value *) valueA)->val + ((moon_int_value *) valueB)->val;
-  } else if (valueA->type == LUA_NUMBER && valueB->type == LUA_NUMBER) {
-    number_val = ((moon_number_value *) valueA)->val + ((moon_number_value *) valueB)->val;
+  if (value_a->type == LUA_INT && value_b->type == LUA_INT) {
+    int_val = ((moon_int_value *) value_a)->val + ((moon_int_value *) value_b)->val;
+  } else if (value_a->type == LUA_INT && value_b->type == LUA_NUMBER) {
+    number_val = ((moon_int_value *) value_a)->val + ((moon_number_value *) value_b)->val;
+  } else if (value_a->type == LUA_NUMBER && value_b->type == LUA_INT) {
+    number_val = ((moon_number_value *) value_a)->val + ((moon_int_value *) value_b)->val;
+  } else if (value_a->type == LUA_NUMBER && value_b->type == LUA_NUMBER) {
+    number_val = ((moon_number_value *) value_a)->val + ((moon_number_value *) value_b)->val;
   }
 
-  create_result_value(result, valueA, valueB, int_val, number_val);
+  create_result_value(result, value_a, value_b, int_val, number_val);
 }
 
-static void create_op_sub_result(moon_reference * result, moon_value * valueA, moon_value * valueB) {
+static void create_op_sub_result(moon_reference * result, moon_value * value_a, moon_value * value_b) {
   CTYPE_LUA_INT int_val;
   CTYPE_LUA_NUMBER number_val;
 
-  if (check_arithmetic_values(valueA, valueB) == FALSE) return;
+  if (check_arithmetic_values(value_a, value_b) == FALSE) return;
 
-  if (valueA->type == LUA_INT && valueB->type == LUA_INT) {
-    int_val = ((moon_int_value *) valueA)->val - ((moon_int_value *) valueB)->val;
-  } else if (valueA->type == LUA_INT && valueB->type == LUA_NUMBER) {
-    number_val = ((moon_int_value *) valueA)->val - ((moon_number_value *) valueB)->val;
-  } else if (valueA->type == LUA_NUMBER && valueB->type == LUA_INT) {
-    number_val = ((moon_number_value *) valueA)->val - ((moon_int_value *) valueB)->val;
-  } else if (valueA->type == LUA_NUMBER && valueB->type == LUA_NUMBER) {
-    number_val = ((moon_number_value *) valueA)->val - ((moon_number_value *) valueB)->val;
+  if (value_a->type == LUA_INT && value_b->type == LUA_INT) {
+    int_val = ((moon_int_value *) value_a)->val - ((moon_int_value *) value_b)->val;
+  } else if (value_a->type == LUA_INT && value_b->type == LUA_NUMBER) {
+    number_val = ((moon_int_value *) value_a)->val - ((moon_number_value *) value_b)->val;
+  } else if (value_a->type == LUA_NUMBER && value_b->type == LUA_INT) {
+    number_val = ((moon_number_value *) value_a)->val - ((moon_int_value *) value_b)->val;
+  } else if (value_a->type == LUA_NUMBER && value_b->type == LUA_NUMBER) {
+    number_val = ((moon_number_value *) value_a)->val - ((moon_number_value *) value_b)->val;
   }
 
-  create_result_value(result, valueA, valueB, int_val, number_val);
+  create_result_value(result, value_a, value_b, int_val, number_val);
 }
 
-static void create_op_div_result(moon_reference * result, moon_value * valueA, moon_value * valueB) {
+static void create_op_div_result(moon_reference * result, moon_value * value_a, moon_value * value_b) {
   CTYPE_LUA_INT int_val;
   CTYPE_LUA_NUMBER number_val;
 
-  if (check_arithmetic_values(valueA, valueB) == FALSE) return;
+  if (check_arithmetic_values(value_a, value_b) == FALSE) return;
 
-  if (valueA->type == LUA_INT && valueB->type == LUA_INT) {
-    int_val = ((moon_int_value *) valueA)->val / ((moon_int_value *) valueB)->val;
-  } else if (valueA->type == LUA_INT && valueB->type == LUA_NUMBER) {
-    number_val = ((moon_int_value *) valueA)->val / ((moon_number_value *) valueB)->val;
-  } else if (valueA->type == LUA_NUMBER && valueB->type == LUA_INT) {
-    number_val = ((moon_number_value *) valueA)->val / ((moon_int_value *) valueB)->val;
-  } else if (valueA->type == LUA_NUMBER && valueB->type == LUA_NUMBER) {
-    number_val = ((moon_number_value *) valueA)->val / ((moon_number_value *) valueB)->val;
+  if (value_a->type == LUA_INT && value_b->type == LUA_INT) {
+    int_val = ((moon_int_value *) value_a)->val / ((moon_int_value *) value_b)->val;
+  } else if (value_a->type == LUA_INT && value_b->type == LUA_NUMBER) {
+    number_val = ((moon_int_value *) value_a)->val / ((moon_number_value *) value_b)->val;
+  } else if (value_a->type == LUA_NUMBER && value_b->type == LUA_INT) {
+    number_val = ((moon_number_value *) value_a)->val / ((moon_int_value *) value_b)->val;
+  } else if (value_a->type == LUA_NUMBER && value_b->type == LUA_NUMBER) {
+    number_val = ((moon_number_value *) value_a)->val / ((moon_number_value *) value_b)->val;
   }
 
-  create_result_value(result, valueA, valueB, int_val, number_val);
+  create_result_value(result, value_a, value_b, int_val, number_val);
 }
 
-static void create_op_mul_result(moon_reference * result, moon_value * valueA, moon_value * valueB) {
+static void create_op_mul_result(moon_reference * result, moon_value * value_a, moon_value * value_b) {
   CTYPE_LUA_INT int_val;
   CTYPE_LUA_NUMBER number_val;
 
-  if (check_arithmetic_values(valueA, valueB) == FALSE) return;
+  if (check_arithmetic_values(value_a, value_b) == FALSE) return;
 
-  if (valueA->type == LUA_INT && valueB->type == LUA_INT) {
-    int_val = ((moon_int_value *) valueA)->val * ((moon_int_value *) valueB)->val;
-  } else if (valueA->type == LUA_INT && valueB->type == LUA_NUMBER) {
-    number_val = ((moon_int_value *) valueA)->val * ((moon_number_value *) valueB)->val;
-  } else if (valueA->type == LUA_NUMBER && valueB->type == LUA_INT) {
-    number_val = ((moon_number_value *) valueA)->val * ((moon_int_value *) valueB)->val;
-  } else if (valueA->type == LUA_NUMBER && valueB->type == LUA_NUMBER) {
-    number_val = ((moon_number_value *) valueA)->val * ((moon_number_value *) valueB)->val;
+  if (value_a->type == LUA_INT && value_b->type == LUA_INT) {
+    int_val = ((moon_int_value *) value_a)->val * ((moon_int_value *) value_b)->val;
+  } else if (value_a->type == LUA_INT && value_b->type == LUA_NUMBER) {
+    number_val = ((moon_int_value *) value_a)->val * ((moon_number_value *) value_b)->val;
+  } else if (value_a->type == LUA_NUMBER && value_b->type == LUA_INT) {
+    number_val = ((moon_number_value *) value_a)->val * ((moon_int_value *) value_b)->val;
+  } else if (value_a->type == LUA_NUMBER && value_b->type == LUA_NUMBER) {
+    number_val = ((moon_number_value *) value_a)->val * ((moon_number_value *) value_b)->val;
   }
 
-  create_result_value(result, valueA, valueB, int_val, number_val);
+  create_result_value(result, value_a, value_b, int_val, number_val);
 }
 
+static void create_op_concat_result(moon_reference * result, moon_value * value_a, moon_value * value_b) {
+  if (check_literal_values(value_a, value_b) == FALSE) return;
+
+  uint16_t length = ((moon_string_value *) value_a)->length + ((moon_string_value *) value_b)->length;
+
+  result->value_addr = (SRAM_ADDRESS) malloc(sizeof(moon_string_value));
+  ((moon_string_value *) result->value_addr)->type = LUA_STRING;
+  ((moon_string_value *) result->value_addr)->string_addr = (SRAM_ADDRESS) malloc(length + 1);
+  ((moon_string_value *) result->value_addr)->length = length;
+  ((moon_string_value *) result->value_addr)->nodes = 1;
+
+  sprintf(
+    (char *) ((moon_string_value *) result->value_addr)->string_addr,
+    "%s%s",
+    (char *)((moon_string_value *) value_a)->string_addr,
+    (char *)((moon_string_value *) value_b)->string_addr
+  );
+}
 
 static void create_op_bufs(moon_reference * buf1_ref, moon_reference * buf2_ref, moon_instruction * instruction, moon_closure * closure) {
   moon_reference const_ref;
@@ -331,6 +373,19 @@ static void op_move(moon_instruction * instruction, moon_closure * closure) {
   }
 }
 
+static void op_concat(moon_instruction * instruction, moon_closure * closure) {
+  moon_reference buf1_ref;
+  moon_reference buf2_ref;
+
+  create_register(closure, instruction->a);
+  create_op_bufs(&buf1_ref, &buf2_ref, instruction, closure);
+  create_op_concat_result(closure->registers[instruction->a], (moon_value *) buf1_ref.value_addr, (moon_value *) buf2_ref.value_addr);
+  closure->registers[instruction->a]->is_progmem = FALSE;
+
+  if (buf1_ref.is_copy == TRUE) delete_value((moon_value *) buf1_ref.value_addr);
+  if (buf2_ref.is_copy == TRUE) delete_value((moon_value *) buf2_ref.value_addr);
+}
+
 static void run_instruction(moon_closure * closure, uint16_t index) {
   moon_instruction instruction;
 
@@ -357,6 +412,9 @@ static void run_instruction(moon_closure * closure, uint16_t index) {
       break;
     case OPCODE_MOVE:
       op_move(&instruction, closure);
+      break;
+    case OPCODE_CONCAT:
+      op_concat(&instruction, closure);
       break;
     case OPCODE_RETURN:
       // @TODO : manage return value
