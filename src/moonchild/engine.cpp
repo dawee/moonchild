@@ -128,6 +128,20 @@ static BOOL check_arithmetic_values(moon_value * valueA, moon_value * valueB) {
   return TRUE;
 }
 
+static void create_result_value(moon_reference * result, moon_value * valueA, moon_value * valueB, CTYPE_LUA_INT int_val, CTYPE_LUA_NUMBER number_val) {
+  if (valueA->type == LUA_NUMBER || valueB->type == LUA_NUMBER) {
+    result->value_addr = (SRAM_ADDRESS) malloc(sizeof(moon_number_value));
+    ((moon_number_value *) result->value_addr)->type = LUA_NUMBER;
+    ((moon_number_value *) result->value_addr)->val = number_val;
+    ((moon_number_value *) result->value_addr)->nodes = 1;
+  } else {
+    result->value_addr = (SRAM_ADDRESS) malloc(sizeof(moon_int_value));
+    ((moon_int_value *) result->value_addr)->type = LUA_INT;
+    ((moon_int_value *) result->value_addr)->val = int_val;
+    ((moon_int_value *) result->value_addr)->nodes = 1;
+  }
+}
+
 static void create_sum_result(moon_reference * result, moon_value * valueA, moon_value * valueB) {
   CTYPE_LUA_INT int_val;
   CTYPE_LUA_NUMBER number_val;
@@ -144,17 +158,7 @@ static void create_sum_result(moon_reference * result, moon_value * valueA, moon
     number_val = ((moon_number_value *) valueA)->val + ((moon_number_value *) valueB)->val;
   }
 
-  if (valueA->type == LUA_NUMBER || valueB->type == LUA_NUMBER) {
-    result->value_addr = (SRAM_ADDRESS) malloc(sizeof(moon_number_value));
-    ((moon_number_value *) result->value_addr)->type = LUA_NUMBER;
-    ((moon_number_value *) result->value_addr)->val = number_val;
-    ((moon_number_value *) result->value_addr)->nodes = 1;
-  } else {
-    result->value_addr = (SRAM_ADDRESS) malloc(sizeof(moon_int_value));
-    ((moon_int_value *) result->value_addr)->type = LUA_INT;
-    ((moon_int_value *) result->value_addr)->val = int_val;
-    ((moon_int_value *) result->value_addr)->nodes = 1;
-  }
+  create_result_value(result, valueA, valueB, int_val, number_val);
 }
 
 static void read_instruction(moon_instruction * instruction, moon_prototype * prototype, uint16_t index) {
