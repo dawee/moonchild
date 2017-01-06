@@ -20,17 +20,60 @@ static moon_prototype * create_prototype() {
   return (moon_prototype *) malloc(sizeof(moon_prototype));
 }
 
+static void delete_value(moon_value * value) {
+  if (value == NULL) return;
+
+  free(value);
+  value = NULL;
+}
+
+static void create_progmem_value_copy(moon_reference * dest, moon_reference * src) {
+  uint8_t type = progmem_read(src->value_addr, 0);
+
+  switch(type) {
+    case LUA_NIL:
+    case LUA_TRUE:
+    case LUA_FALSE:
+      dest->value_addr = (SRAM_ADDRESS) malloc(sizeof(moon_value));
+      progmem_cpy(dest->value_addr, src->value_addr, sizeof(moon_value));
+      dest->is_copy = TRUE;
+      break;
+
+    case LUA_INT:
+      dest->value_addr = (SRAM_ADDRESS) malloc(sizeof(moon_int_value));
+      progmem_cpy(dest->value_addr, src->value_addr, sizeof(moon_int_value));
+      dest->is_copy = TRUE;
+      break;
+
+    case LUA_NUMBER:
+      dest->value_addr = (SRAM_ADDRESS) malloc(sizeof(moon_number_value));
+      progmem_cpy(dest->value_addr, src->value_addr, sizeof(moon_number_value));
+      dest->is_copy = TRUE;
+      break;
+
+    default:
+      moon_debug("error: could not copy unknown type : %d", type);
+      break;
+  };
+}
+
+static void create_value_copy(moon_reference * dest, moon_reference * src) {
+  if (src->is_progmem == TRUE) {
+    create_progmem_value_copy(dest, src);
+  }
+}
+
 static void read_constant_reference(moon_reference * reference, moon_prototype * prototype, uint16_t index) {
   progmem_cpy(reference, prototype->constants_addr, sizeof(moon_reference), sizeof(moon_reference) * index);
 }
 
 static void set_to_nil(moon_reference * reference) {
-  reference->progmem = TRUE;
+  reference->is_progmem = TRUE;
   reference->value_addr = (SRAM_ADDRESS) &MOON_NIL_VALUE;
 }
 
 static void copy_reference(moon_reference * dest, moon_reference * src) {
-  dest->progmem = src->progmem;
+  dest->is_progmem = src->is_progmem;
   dest->value_addr = src->value_addr;
 }
 
@@ -64,6 +107,47 @@ static void init_closure(moon_closure * closure, PGMEM_ADDRESS prototype_addr) {
   init_registers(closure);
 }
 
+static void create_sum_result(moon_reference * result, moon_value * valueA, moon_value * valueB) {
+  CTYPE_LUA_INT int_val;
+  CTYPE_LUA_NUMBER number_val;
+
+  if (valueA->type == LUA_NIL || valueB->type == LUA_NIL) {
+    moon_debug("error: try to perform arithmetic on a nil value");
+    return;
+  }
+
+  if (valueA->type == LUA_TRUE || valueB->type == LUA_TRUE || valueA->type == LUA_FALSE || valueB->type == LUA_FALSE) {
+    moon_debug("error: try to perform arithmetic on a boolean value");
+    return;
+  }
+
+  if (valueA->type == LUA_STRING || valueB->type == LUA_STRING) {
+    moon_debug("error: try to perform arithmetic on a boolean value");
+    return;
+  }
+
+  if (valueA->type == LUA_INT && valueB->type == LUA_INT) {
+    int_val = ((moon_int_value *) valueA)->val + ((moon_int_value *) valueB)->val;
+  } else if (valueA->type == LUA_INT && valueB->type == LUA_NUMBER) {
+    number_val = ((moon_int_value *) valueA)->val + ((moon_number_value *) valueB)->val;
+  } else if (valueA->type == LUA_NUMBER && valueB->type == LUA_INT) {
+    number_val = ((moon_number_value *) valueA)->val + ((moon_int_value *) valueB)->val;
+  } else if (valueA->type == LUA_NUMBER && valueB->type == LUA_NUMBER) {
+    number_val = ((moon_number_value *) valueA)->val + ((moon_number_value *) valueB)->val;
+  }
+
+  if (valueA->type == LUA_NUMBER || valueB->type == LUA_NUMBER) {
+    result->value_addr = (SRAM_ADDRESS) malloc(sizeof(moon_number_value));
+    ((moon_number_value *) result->value_addr)->type = LUA_NUMBER;
+    ((moon_number_value *) result->value_addr)->val = number_val;
+    ((moon_number_value *) result->value_addr)->nodes = 1;
+  } else {
+    result->value_addr = (SRAM_ADDRESS) malloc(sizeof(moon_int_value));
+    ((moon_int_value *) result->value_addr)->type = LUA_INT;
+    ((moon_int_value *) result->value_addr)->val = int_val;
+    ((moon_int_value *) result->value_addr)->nodes = 1;
+  }
+}
 
 static void read_instruction(moon_instruction * instruction, moon_prototype * prototype, uint16_t index) {
   progmem_cpy(instruction, prototype->instructions_addr, sizeof(moon_instruction), sizeof(moon_instruction) * index);
@@ -71,18 +155,41 @@ static void read_instruction(moon_instruction * instruction, moon_prototype * pr
 
 static void run_instruction(moon_closure * closure, uint16_t index) {
   moon_instruction instruction;
+  moon_reference const_ref;
+  moon_reference buf1_ref;
+  moon_reference buf2_ref;
 
   read_instruction(&instruction, closure->prototype, index);
 
   switch(instruction.opcode) {
     case OPCODE_LOADK:
       create_register(closure, instruction.a);
-      copy_constant_reference(closure->registers[instruction.a], closure->prototype, instruction.b);
+      read_constant_reference(&const_ref, closure->prototype, instruction.b);
+      copy_reference(closure->registers[instruction.a], &const_ref);
       break;
+    case OPCODE_ADD:
+      create_register(closure, instruction.a);
 
+      if ((instruction.flag & OPCK_FLAG) == OPCK_FLAG) {
+        create_value_copy(&buf1_ref, closure->registers[instruction.b]);
+        read_constant_reference(&const_ref, closure->prototype, instruction.c);
+        create_value_copy(&buf2_ref, &const_ref);
+      } else if ((instruction.flag & OPBK_FLAG) == OPBK_FLAG) {
+        read_constant_reference(&const_ref, closure->prototype, instruction.b);
+        create_value_copy(&buf1_ref, &const_ref);
+        create_value_copy(&buf2_ref, closure->registers[instruction.c]);
+      } else {
+        create_value_copy(&buf1_ref, closure->registers[instruction.b]);
+        create_value_copy(&buf2_ref, closure->registers[instruction.c]);
+      }
+
+      create_sum_result(closure->registers[instruction.a], (moon_value *) buf1_ref.value_addr, (moon_value *) buf2_ref.value_addr);
     default:
       break;
   };
+
+  if (buf1_ref.is_copy == TRUE) delete_value((moon_value *) buf1_ref.value_addr);
+  if (buf2_ref.is_copy == TRUE) delete_value((moon_value *) buf2_ref.value_addr);
 }
 
 

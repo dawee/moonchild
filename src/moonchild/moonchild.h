@@ -2,6 +2,7 @@
 #define MOONCHILD_H
 
 #include <stdint.h>
+#include <stdio.h>
 
 #define MOON_MAX_REGISTERS 10
 
@@ -21,8 +22,10 @@ typedef void * SRAM_ADDRESS;
   #include <avr/pgmspace.h>
   typedef uint16_t PGMEM_ADDRESS;
   #define progmem_read(X, Y) pgm_read_byte_near(X + Y)
+  #define moon_debug(...) printf(__VA_ARGS__)
 #else
   #define PROGMEM
+  #define moon_debug(...)
   typedef void * PGMEM_ADDRESS;
   char progmem_read(PGMEM_ADDRESS mem_addr, uint16_t offset);
 #endif
@@ -87,6 +90,9 @@ enum MOON_TYPES {
   LUA_STRING,
 };
 
+typedef int16_t CTYPE_LUA_INT;
+typedef float CTYPE_LUA_NUMBER;
+
 typedef struct {
   uint8_t type;
   uint16_t nodes;
@@ -95,13 +101,13 @@ typedef struct {
 typedef struct {
   uint8_t type;
   uint16_t nodes;
-  int16_t val;
+  CTYPE_LUA_INT val;
 } moon_int_value;
 
 typedef struct {
   uint8_t type;
   uint16_t nodes;
-  float val;
+  CTYPE_LUA_NUMBER val;
 } moon_number_value;
 
 typedef struct {
@@ -119,7 +125,8 @@ typedef struct {
 } moon_instruction;
 
 typedef struct {
-  BOOL progmem;
+  BOOL is_progmem;
+  BOOL is_copy;
   SRAM_ADDRESS value_addr;
 } moon_reference;
 
