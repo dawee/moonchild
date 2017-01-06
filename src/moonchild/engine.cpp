@@ -142,6 +142,10 @@ static void create_result_value(moon_reference * result, moon_value * valueA, mo
   }
 }
 
+static void read_instruction(moon_instruction * instruction, moon_prototype * prototype, uint16_t index) {
+  progmem_cpy(instruction, prototype->instructions_addr, sizeof(moon_instruction), sizeof(moon_instruction) * index);
+}
+
 static void create_op_add_result(moon_reference * result, moon_value * valueA, moon_value * valueB) {
   CTYPE_LUA_INT int_val;
   CTYPE_LUA_NUMBER number_val;
@@ -161,9 +165,25 @@ static void create_op_add_result(moon_reference * result, moon_value * valueA, m
   create_result_value(result, valueA, valueB, int_val, number_val);
 }
 
-static void read_instruction(moon_instruction * instruction, moon_prototype * prototype, uint16_t index) {
-  progmem_cpy(instruction, prototype->instructions_addr, sizeof(moon_instruction), sizeof(moon_instruction) * index);
+static void create_op_sub_result(moon_reference * result, moon_value * valueA, moon_value * valueB) {
+  CTYPE_LUA_INT int_val;
+  CTYPE_LUA_NUMBER number_val;
+
+  if (check_arithmetic_values(valueA, valueB) == FALSE) return;
+
+  if (valueA->type == LUA_INT && valueB->type == LUA_INT) {
+    int_val = ((moon_int_value *) valueA)->val - ((moon_int_value *) valueB)->val;
+  } else if (valueA->type == LUA_INT && valueB->type == LUA_NUMBER) {
+    number_val = ((moon_int_value *) valueA)->val - ((moon_number_value *) valueB)->val;
+  } else if (valueA->type == LUA_NUMBER && valueB->type == LUA_INT) {
+    number_val = ((moon_number_value *) valueA)->val - ((moon_int_value *) valueB)->val;
+  } else if (valueA->type == LUA_NUMBER && valueB->type == LUA_NUMBER) {
+    number_val = ((moon_number_value *) valueA)->val - ((moon_number_value *) valueB)->val;
+  }
+
+  create_result_value(result, valueA, valueB, int_val, number_val);
 }
+
 
 static void prepare_op_bufs(moon_reference * buf1_ref, moon_reference * buf2_ref, moon_instruction * instruction, moon_closure * closure) {
   moon_reference const_ref;
@@ -203,6 +223,19 @@ static void op_add(moon_instruction * instruction, moon_closure * closure) {
   if (buf2_ref.is_copy == TRUE) delete_value((moon_value *) buf2_ref.value_addr);
 }
 
+static void op_sub(moon_instruction * instruction, moon_closure * closure) {
+  moon_reference buf1_ref;
+  moon_reference buf2_ref;
+
+  create_register(closure, instruction->a);
+  prepare_op_bufs(&buf1_ref, &buf2_ref, instruction, closure);
+  create_op_sub_result(closure->registers[instruction->a], (moon_value *) buf1_ref.value_addr, (moon_value *) buf2_ref.value_addr);
+  closure->registers[instruction->a]->is_progmem = FALSE;
+
+  if (buf1_ref.is_copy == TRUE) delete_value((moon_value *) buf1_ref.value_addr);
+  if (buf2_ref.is_copy == TRUE) delete_value((moon_value *) buf2_ref.value_addr);
+}
+
 static void run_instruction(moon_closure * closure, uint16_t index) {
   moon_instruction instruction;
 
@@ -214,6 +247,9 @@ static void run_instruction(moon_closure * closure, uint16_t index) {
       break;
     case OPCODE_ADD:
       op_add(&instruction, closure);
+      break;
+    case OPCODE_SUB:
+      op_sub(&instruction, closure);
       break;
     default:
       break;
