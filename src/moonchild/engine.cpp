@@ -165,11 +165,37 @@ static void read_instruction(moon_instruction * instruction, moon_prototype * pr
   progmem_cpy(instruction, prototype->instructions_addr, sizeof(moon_instruction), sizeof(moon_instruction) * index);
 }
 
-static void run_instruction(moon_closure * closure, uint16_t index) {
-  moon_instruction instruction;
+static void op_add(moon_instruction * instruction, moon_closure * closure) {
   moon_reference const_ref;
   moon_reference buf1_ref;
   moon_reference buf2_ref;
+
+  create_register(closure, instruction->a);
+
+  if ((instruction->flag & OPCK_FLAG) == OPCK_FLAG) {
+    create_value_copy(&buf1_ref, closure->registers[instruction->b]);
+    read_constant_reference(&const_ref, closure->prototype, instruction->c);
+    create_value_copy(&buf2_ref, &const_ref);
+  } else if ((instruction->flag & OPBK_FLAG) == OPBK_FLAG) {
+    read_constant_reference(&const_ref, closure->prototype, instruction->b);
+    create_value_copy(&buf1_ref, &const_ref);
+    create_value_copy(&buf2_ref, closure->registers[instruction->c]);
+  } else {
+    create_value_copy(&buf1_ref, closure->registers[instruction->b]);
+    create_value_copy(&buf2_ref, closure->registers[instruction->c]);
+  }
+
+  create_sum_result(closure->registers[instruction->a], (moon_value *) buf1_ref.value_addr, (moon_value *) buf2_ref.value_addr);
+  closure->registers[instruction->a]->is_progmem = FALSE;
+
+
+  if (buf1_ref.is_copy == TRUE) delete_value((moon_value *) buf1_ref.value_addr);
+  if (buf2_ref.is_copy == TRUE) delete_value((moon_value *) buf2_ref.value_addr);
+}
+
+static void run_instruction(moon_closure * closure, uint16_t index) {
+  moon_instruction instruction;
+  moon_reference const_ref;
 
   read_instruction(&instruction, closure->prototype, index);
 
@@ -180,29 +206,12 @@ static void run_instruction(moon_closure * closure, uint16_t index) {
       copy_reference(closure->registers[instruction.a], &const_ref);
       break;
     case OPCODE_ADD:
-      create_register(closure, instruction.a);
-
-      if ((instruction.flag & OPCK_FLAG) == OPCK_FLAG) {
-        create_value_copy(&buf1_ref, closure->registers[instruction.b]);
-        read_constant_reference(&const_ref, closure->prototype, instruction.c);
-        create_value_copy(&buf2_ref, &const_ref);
-      } else if ((instruction.flag & OPBK_FLAG) == OPBK_FLAG) {
-        read_constant_reference(&const_ref, closure->prototype, instruction.b);
-        create_value_copy(&buf1_ref, &const_ref);
-        create_value_copy(&buf2_ref, closure->registers[instruction.c]);
-      } else {
-        create_value_copy(&buf1_ref, closure->registers[instruction.b]);
-        create_value_copy(&buf2_ref, closure->registers[instruction.c]);
-      }
-
-      create_sum_result(closure->registers[instruction.a], (moon_value *) buf1_ref.value_addr, (moon_value *) buf2_ref.value_addr);
-      closure->registers[instruction.a]->is_progmem = FALSE;
+      op_add(&instruction, closure);
+      break;
     default:
       break;
   };
 
-  if (buf1_ref.is_copy == TRUE) delete_value((moon_value *) buf1_ref.value_addr);
-  if (buf2_ref.is_copy == TRUE) delete_value((moon_value *) buf2_ref.value_addr);
 }
 
 
