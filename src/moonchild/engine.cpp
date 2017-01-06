@@ -142,7 +142,7 @@ static void create_result_value(moon_reference * result, moon_value * valueA, mo
   }
 }
 
-static void create_sum_result(moon_reference * result, moon_value * valueA, moon_value * valueB) {
+static void create_op_add_result(moon_reference * result, moon_value * valueA, moon_value * valueB) {
   CTYPE_LUA_INT int_val;
   CTYPE_LUA_NUMBER number_val;
 
@@ -196,7 +196,7 @@ static void op_add(moon_instruction * instruction, moon_closure * closure) {
 
   create_register(closure, instruction->a);
   prepare_op_bufs(&buf1_ref, &buf2_ref, instruction, closure);
-  create_sum_result(closure->registers[instruction->a], (moon_value *) buf1_ref.value_addr, (moon_value *) buf2_ref.value_addr);
+  create_op_add_result(closure->registers[instruction->a], (moon_value *) buf1_ref.value_addr, (moon_value *) buf2_ref.value_addr);
   closure->registers[instruction->a]->is_progmem = FALSE;
 
   if (buf1_ref.is_copy == TRUE) delete_value((moon_value *) buf1_ref.value_addr);
