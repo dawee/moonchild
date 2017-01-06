@@ -57,9 +57,16 @@ static void create_progmem_value_copy(moon_reference * dest, moon_reference * sr
   };
 }
 
+static void copy_reference(moon_reference * dest, moon_reference * src) {
+  dest->is_progmem = src->is_progmem;
+  dest->value_addr = src->value_addr;
+}
+
 static void create_value_copy(moon_reference * dest, moon_reference * src) {
   if (src->is_progmem == TRUE) {
     create_progmem_value_copy(dest, src);
+  } else {
+    copy_reference(dest, src);
   }
 }
 
@@ -70,11 +77,6 @@ static void read_constant_reference(moon_reference * reference, moon_prototype *
 static void set_to_nil(moon_reference * reference) {
   reference->is_progmem = TRUE;
   reference->value_addr = (SRAM_ADDRESS) &MOON_NIL_VALUE;
-}
-
-static void copy_reference(moon_reference * dest, moon_reference * src) {
-  dest->is_progmem = src->is_progmem;
-  dest->value_addr = src->value_addr;
 }
 
 static void copy_constant_reference(moon_reference * dest, moon_prototype * prototype, uint16_t index) {
@@ -184,6 +186,7 @@ static void run_instruction(moon_closure * closure, uint16_t index) {
       }
 
       create_sum_result(closure->registers[instruction.a], (moon_value *) buf1_ref.value_addr, (moon_value *) buf2_ref.value_addr);
+      closure->registers[instruction.a]->is_progmem = FALSE;
     default:
       break;
   };
