@@ -113,7 +113,7 @@ typedef struct {
 typedef struct {
   uint8_t type;
   uint16_t nodes;
-  char * str;
+  SRAM_ADDRESS string_addr;
 } moon_string_value;
 
 typedef struct {
