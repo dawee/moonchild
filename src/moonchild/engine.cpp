@@ -95,6 +95,16 @@ static void set_to_nil(moon_reference * reference) {
   reference->value_addr = (SRAM_ADDRESS) &MOON_NIL_VALUE;
 }
 
+static void set_to_true(moon_reference * reference) {
+  reference->is_progmem = TRUE;
+  reference->value_addr = (SRAM_ADDRESS) &MOON_TRUE_VALUE;
+}
+
+static void set_to_false(moon_reference * reference) {
+  reference->is_progmem = TRUE;
+  reference->value_addr = (SRAM_ADDRESS) &MOON_FALSE_VALUE;
+}
+
 static void copy_constant_reference(moon_reference * dest, moon_prototype * prototype, uint16_t index) {
   moon_reference constant_reference;
 
@@ -304,6 +314,18 @@ static void op_loadnil(moon_instruction * instruction, moon_closure * closure) {
   create_register(closure, instruction->a);
 }
 
+static void op_loadbool(moon_instruction * instruction, moon_closure * closure) {
+  moon_reference const_ref;
+
+  create_register(closure, instruction->a);
+
+  if (instruction->b == 1) {
+    set_to_true(closure->registers[instruction->a]);
+  } else {
+    set_to_false(closure->registers[instruction->a]);
+  }
+}
+
 static void op_loadk(moon_instruction * instruction, moon_closure * closure) {
   moon_reference const_ref;
 
@@ -395,6 +417,9 @@ static void run_instruction(moon_closure * closure, uint16_t index) {
     case OPCODE_LOADNIL:
       op_loadnil(&instruction, closure);
       break;
+    case OPCODE_LOADBOOL:
+      op_loadbool(&instruction, closure);
+      break;
     case OPCODE_LOADK:
       op_loadk(&instruction, closure);
       break;
@@ -443,6 +468,12 @@ void moon_run(PGMEM_ADDRESS prototype_addr, char * result) {
   switch(((moon_value *) buf_ref.value_addr)->type) {
     case LUA_NIL:
       sprintf(result, "nil\n");
+      break;
+    case LUA_FALSE:
+      sprintf(result, "false\n");
+      break;
+    case LUA_TRUE:
+      sprintf(result, "true\n");
       break;
     case LUA_INT:
       sprintf(result, "%d\n", ((moon_int_value *) buf_ref.value_addr)->val);
