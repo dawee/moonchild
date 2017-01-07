@@ -479,7 +479,7 @@ void moon_run(PGMEM_ADDRESS prototype_addr, char * result) {
       sprintf(result, "%d\n", ((moon_int_value *) buf_ref.value_addr)->val);
       break;
     case LUA_NUMBER:
-      sprintf(result, "%d\n", ((moon_int_value *) buf_ref.value_addr)->val);
+      sprintf(result, "~%d\n", (int)((moon_number_value *) buf_ref.value_addr)->val);
       break;
     case LUA_STRING:
       sprintf(result, "%s\n", (char *)(((moon_string_value *) buf_ref.value_addr)->string_addr));
