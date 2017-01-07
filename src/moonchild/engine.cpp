@@ -58,11 +58,16 @@ static void create_progmem_value_copy(moon_reference * dest, moon_reference * sr
 
     case LUA_STRING:
       dest->value_addr = (SRAM_ADDRESS) malloc(sizeof(moon_string_value));
+      dest->is_progmem = FALSE;
+
+      progmem_cpy(&string_value, src->value_addr, sizeof(moon_string_value));
       progmem_cpy(dest->value_addr, src->value_addr, sizeof(moon_string_value));
-      string_value = *((moon_string_value *)(dest->value_addr));
-      string_value.string_addr = (SRAM_ADDRESS) malloc(string_value.length + 1);
-      progmem_cpy(string_value.string_addr, ((moon_string_value *)(src->value_addr))->string_addr, string_value.length);
-      ((char *) string_value.string_addr)[string_value.length] = '\0';
+
+      ((moon_string_value *) dest->value_addr)->string_addr = (SRAM_ADDRESS) malloc(((moon_string_value *) dest->value_addr)->length + 1);
+
+      progmem_cpy(((moon_string_value *) dest->value_addr)->string_addr, string_value.string_addr, ((moon_string_value *) dest->value_addr)->length);
+
+      ((char *)(((moon_string_value *) dest->value_addr)->string_addr))[((moon_string_value *) dest->value_addr)->length] = '\0';
 
       dest->is_copy = TRUE;
       break;
