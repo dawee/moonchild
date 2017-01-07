@@ -136,6 +136,8 @@ typedef struct {
   PGMEM_ADDRESS instructions_addr;
   uint16_t constants_count;
   PGMEM_ADDRESS constants_addr;
+  uint16_t prototypes_count;
+  PGMEM_ADDRESS prototypes_addr;
 } moon_prototype;
 
 typedef struct {
