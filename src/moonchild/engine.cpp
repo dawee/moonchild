@@ -431,6 +431,18 @@ static void run_closure(moon_closure * closure) {
   }
 }
 
+static void copy_to_params(moon_closure * closure, moon_closure * sub_closure, uint16_t count) {
+  moon_prototype prototype;
+  moon_prototype sub_prototype;
+
+  read_closure_prototype(&prototype, closure);
+  read_closure_prototype(&sub_prototype, sub_closure);
+
+  for (uint16_t index = 0; index < count; ++index) {
+    create_value_copy(sub_closure->registers[index], closure->registers[prototype.max_stack_size - index - 1]);
+  }
+}
+
 static void op_loadnil(moon_instruction * instruction, moon_closure * closure) {
   set_to_nil(closure->registers[instruction->a]);
 }
@@ -575,6 +587,9 @@ static void op_call(moon_instruction * instruction, moon_closure * closure) {
 
   sub_closure = (moon_closure *) closure->registers[instruction->a]->value_addr;
 
+  create_registers(sub_closure);
+
+  if (instruction->b > 1) copy_to_params(closure, sub_closure, instruction->b - 1);
   run_closure(sub_closure);
 
   if (bufa_ref.is_copy == TRUE) delete_value((moon_value *) bufa_ref.value_addr);
