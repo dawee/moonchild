@@ -596,6 +596,12 @@ static void op_call(moon_instruction * instruction, moon_closure * closure) {
   if (bufa_ref.is_copy == TRUE) delete_value((moon_value *) bufa_ref.value_addr);
 }
 
+static void op_return(moon_instruction * instruction, moon_closure * closure) {
+  if (instruction->b != 2) return;  // @TODO : manage quitting closure behaviour
+
+  copy_reference(&(closure->result), closure->registers[instruction->a]);
+}
+
 static void run_instruction(moon_instruction * instruction, moon_closure * closure) {
   switch(instruction->opcode) {
     case OPCODE_LOADNIL:
@@ -637,9 +643,8 @@ static void run_instruction(moon_instruction * instruction, moon_closure * closu
     case OPCODE_CALL:
       op_call(instruction, closure);
       break;
-
     case OPCODE_RETURN:
-      // @TODO : manage return value
+      op_return(instruction, closure);
       break;
 
     default:
