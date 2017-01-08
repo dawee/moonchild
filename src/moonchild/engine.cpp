@@ -69,18 +69,21 @@ static void create_progmem_value_copy(moon_reference * dest, moon_reference * sr
       dest->value_addr = (SRAM_ADDRESS) malloc(sizeof(moon_value));
       progmem_cpy(dest->value_addr, src->value_addr, sizeof(moon_value));
       dest->is_copy = TRUE;
+      dest->is_progmem = FALSE;
       break;
 
     case LUA_INT:
       dest->value_addr = (SRAM_ADDRESS) malloc(sizeof(moon_int_value));
       progmem_cpy(dest->value_addr, src->value_addr, sizeof(moon_int_value));
       dest->is_copy = TRUE;
+      dest->is_progmem = FALSE;
       break;
 
     case LUA_NUMBER:
       dest->value_addr = (SRAM_ADDRESS) malloc(sizeof(moon_number_value));
       progmem_cpy(dest->value_addr, src->value_addr, sizeof(moon_number_value));
       dest->is_copy = TRUE;
+      dest->is_progmem = FALSE;
       break;
 
     case LUA_STRING:
@@ -590,8 +593,12 @@ static void op_call(moon_instruction * instruction, moon_closure * closure) {
 
   create_registers(sub_closure);
 
-  if (instruction->b > 1) copy_to_params(closure, sub_closure, instruction->b - 1);
+  if (instruction->b > 1) {
+    copy_to_params(closure, sub_closure, instruction->b - 1);
+  }
+
   run_closure(sub_closure);
+  copy_reference(closure->registers[instruction->a], &(sub_closure->result));
 
   if (bufa_ref.is_copy == TRUE) delete_value((moon_value *) bufa_ref.value_addr);
 }
