@@ -132,6 +132,18 @@ typedef struct {
   SRAM_ADDRESS value_addr;
 } moon_reference;
 
+typedef struct moon_hash_pair_t {
+  moon_reference key;
+  moon_reference value;
+  struct moon_hash_pair_t * next;
+} moon_hash_pair;
+
+typedef struct {
+  uint16_t count;
+  moon_hash_pair * first;
+  moon_hash_pair * last;
+} moon_hash;
+
 typedef struct {
   uint8_t num_params;
   uint8_t is_varargs;
@@ -147,6 +159,7 @@ typedef struct {
 typedef struct {
   uint8_t type;
   uint16_t nodes;
+  moon_hash up_values;
   PGMEM_ADDRESS prototype_addr;
   moon_reference * registers[MOON_MAX_REGISTERS];
 } moon_closure;

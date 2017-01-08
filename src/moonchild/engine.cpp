@@ -12,6 +12,10 @@ static void progmem_cpy(void * dest, PGMEM_ADDRESS src, uint16_t size, uint16_t 
   }
 }
 
+static void init_hash(moon_hash * hash) {
+  hash->count = 0;
+}
+
 static void init_registers(moon_closure * closure);
 
 static moon_closure * create_closure(PGMEM_ADDRESS prototype_addr) {
@@ -19,6 +23,8 @@ static moon_closure * create_closure(PGMEM_ADDRESS prototype_addr) {
 
   closure->type = LUA_CLOSURE;
   closure->prototype_addr = prototype_addr;
+
+  init_hash(&closure->up_values);
   init_registers(closure);
 
   return closure;
