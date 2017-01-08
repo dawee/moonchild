@@ -132,6 +132,9 @@ typedef struct {
 } moon_reference;
 
 typedef struct {
+  uint8_t num_params;
+  uint8_t is_varargs;
+  uint8_t max_stack_size;
   uint16_t instructions_count;
   PGMEM_ADDRESS instructions_addr;
   uint16_t constants_count;
