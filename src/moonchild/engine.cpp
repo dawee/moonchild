@@ -376,23 +376,43 @@ static void create_op_concat_result(moon_reference * result, moon_value * value_
   );
 }
 
-static void create_op_bufs(moon_reference * buf1_ref, moon_reference * buf2_ref, moon_instruction * instruction, moon_closure * closure) {
+static void create_op_bufs(moon_reference * bufb_ref, moon_reference * bufc_ref, moon_instruction * instruction, moon_closure * closure) {
   moon_reference const_ref;
   moon_prototype prototype;
 
   read_closure_prototype(&prototype, closure);
 
   if ((instruction->flag & OPCK_FLAG) == OPCK_FLAG) {
-    create_value_copy(buf1_ref, closure->registers[instruction->b]);
+    create_value_copy(bufb_ref, closure->registers[instruction->b]);
     read_constant_reference(&const_ref, &prototype, instruction->c);
-    create_value_copy(buf2_ref, &const_ref);
+    create_value_copy(bufc_ref, &const_ref);
   } else if ((instruction->flag & OPBK_FLAG) == OPBK_FLAG) {
     read_constant_reference(&const_ref, &prototype, instruction->b);
-    create_value_copy(buf1_ref, &const_ref);
-    create_value_copy(buf2_ref, closure->registers[instruction->c]);
+    create_value_copy(bufb_ref, &const_ref);
+    create_value_copy(bufc_ref, closure->registers[instruction->c]);
   } else {
-    create_value_copy(buf1_ref, closure->registers[instruction->b]);
-    create_value_copy(buf2_ref, closure->registers[instruction->c]);
+    create_value_copy(bufb_ref, closure->registers[instruction->b]);
+    create_value_copy(bufc_ref, closure->registers[instruction->c]);
+  }
+}
+
+static void copy_op_bufs(moon_reference * bufb_ref, moon_reference * bufc_ref, moon_instruction * instruction, moon_closure * closure) {
+  moon_reference const_ref;
+  moon_prototype prototype;
+
+  read_closure_prototype(&prototype, closure);
+
+  if ((instruction->flag & OPCK_FLAG) == OPCK_FLAG) {
+    create_value_copy(bufb_ref, closure->registers[instruction->b]);
+    read_constant_reference(&const_ref, &prototype, instruction->c);
+    copy_reference(bufc_ref, &const_ref);
+  } else if ((instruction->flag & OPBK_FLAG) == OPBK_FLAG) {
+    read_constant_reference(&const_ref, &prototype, instruction->b);
+    copy_reference(bufb_ref, &const_ref);
+    copy_reference(bufc_ref, closure->registers[instruction->c]);
+  } else {
+    copy_reference(bufb_ref, closure->registers[instruction->b]);
+    copy_reference(bufc_ref, closure->registers[instruction->c]);
   }
 }
 
@@ -433,51 +453,51 @@ static void op_loadk(moon_instruction * instruction, moon_closure * closure) {
 }
 
 static void op_add(moon_instruction * instruction, moon_closure * closure) {
-  moon_reference buf1_ref;
-  moon_reference buf2_ref;
+  moon_reference bufb_ref;
+  moon_reference bufc_ref;
 
-  create_op_bufs(&buf1_ref, &buf2_ref, instruction, closure);
-  create_op_add_result(closure->registers[instruction->a], (moon_value *) buf1_ref.value_addr, (moon_value *) buf2_ref.value_addr);
+  create_op_bufs(&bufb_ref, &bufc_ref, instruction, closure);
+  create_op_add_result(closure->registers[instruction->a], (moon_value *) bufb_ref.value_addr, (moon_value *) bufc_ref.value_addr);
   closure->registers[instruction->a]->is_progmem = FALSE;
 
-  if (buf1_ref.is_copy == TRUE) delete_value((moon_value *) buf1_ref.value_addr);
-  if (buf2_ref.is_copy == TRUE) delete_value((moon_value *) buf2_ref.value_addr);
+  if (bufb_ref.is_copy == TRUE) delete_value((moon_value *) bufb_ref.value_addr);
+  if (bufc_ref.is_copy == TRUE) delete_value((moon_value *) bufc_ref.value_addr);
 }
 
 static void op_sub(moon_instruction * instruction, moon_closure * closure) {
-  moon_reference buf1_ref;
-  moon_reference buf2_ref;
+  moon_reference bufb_ref;
+  moon_reference bufc_ref;
 
-  create_op_bufs(&buf1_ref, &buf2_ref, instruction, closure);
-  create_op_sub_result(closure->registers[instruction->a], (moon_value *) buf1_ref.value_addr, (moon_value *) buf2_ref.value_addr);
+  create_op_bufs(&bufb_ref, &bufc_ref, instruction, closure);
+  create_op_sub_result(closure->registers[instruction->a], (moon_value *) bufb_ref.value_addr, (moon_value *) bufc_ref.value_addr);
   closure->registers[instruction->a]->is_progmem = FALSE;
 
-  if (buf1_ref.is_copy == TRUE) delete_value((moon_value *) buf1_ref.value_addr);
-  if (buf2_ref.is_copy == TRUE) delete_value((moon_value *) buf2_ref.value_addr);
+  if (bufb_ref.is_copy == TRUE) delete_value((moon_value *) bufb_ref.value_addr);
+  if (bufc_ref.is_copy == TRUE) delete_value((moon_value *) bufc_ref.value_addr);
 }
 
 static void op_mul(moon_instruction * instruction, moon_closure * closure) {
-  moon_reference buf1_ref;
-  moon_reference buf2_ref;
+  moon_reference bufb_ref;
+  moon_reference bufc_ref;
 
-  create_op_bufs(&buf1_ref, &buf2_ref, instruction, closure);
-  create_op_mul_result(closure->registers[instruction->a], (moon_value *) buf1_ref.value_addr, (moon_value *) buf2_ref.value_addr);
+  create_op_bufs(&bufb_ref, &bufc_ref, instruction, closure);
+  create_op_mul_result(closure->registers[instruction->a], (moon_value *) bufb_ref.value_addr, (moon_value *) bufc_ref.value_addr);
   closure->registers[instruction->a]->is_progmem = FALSE;
 
-  if (buf1_ref.is_copy == TRUE) delete_value((moon_value *) buf1_ref.value_addr);
-  if (buf2_ref.is_copy == TRUE) delete_value((moon_value *) buf2_ref.value_addr);
+  if (bufb_ref.is_copy == TRUE) delete_value((moon_value *) bufb_ref.value_addr);
+  if (bufc_ref.is_copy == TRUE) delete_value((moon_value *) bufc_ref.value_addr);
 }
 
 static void op_div(moon_instruction * instruction, moon_closure * closure) {
-  moon_reference buf1_ref;
-  moon_reference buf2_ref;
+  moon_reference bufb_ref;
+  moon_reference bufc_ref;
 
-  create_op_bufs(&buf1_ref, &buf2_ref, instruction, closure);
-  create_op_div_result(closure->registers[instruction->a], (moon_value *) buf1_ref.value_addr, (moon_value *) buf2_ref.value_addr);
+  create_op_bufs(&bufb_ref, &bufc_ref, instruction, closure);
+  create_op_div_result(closure->registers[instruction->a], (moon_value *) bufb_ref.value_addr, (moon_value *) bufc_ref.value_addr);
   closure->registers[instruction->a]->is_progmem = FALSE;
 
-  if (buf1_ref.is_copy == TRUE) delete_value((moon_value *) buf1_ref.value_addr);
-  if (buf2_ref.is_copy == TRUE) delete_value((moon_value *) buf2_ref.value_addr);
+  if (bufb_ref.is_copy == TRUE) delete_value((moon_value *) bufb_ref.value_addr);
+  if (bufc_ref.is_copy == TRUE) delete_value((moon_value *) bufc_ref.value_addr);
 }
 
 static void op_move(moon_instruction * instruction, moon_closure * closure) {
@@ -489,15 +509,15 @@ static void op_move(moon_instruction * instruction, moon_closure * closure) {
 }
 
 static void op_concat(moon_instruction * instruction, moon_closure * closure) {
-  moon_reference buf1_ref;
-  moon_reference buf2_ref;
+  moon_reference bufb_ref;
+  moon_reference bufc_ref;
 
-  create_op_bufs(&buf1_ref, &buf2_ref, instruction, closure);
-  create_op_concat_result(closure->registers[instruction->a], (moon_value *) buf1_ref.value_addr, (moon_value *) buf2_ref.value_addr);
+  create_op_bufs(&bufb_ref, &bufc_ref, instruction, closure);
+  create_op_concat_result(closure->registers[instruction->a], (moon_value *) bufb_ref.value_addr, (moon_value *) bufc_ref.value_addr);
   closure->registers[instruction->a]->is_progmem = FALSE;
 
-  if (buf1_ref.is_copy == TRUE) delete_value((moon_value *) buf1_ref.value_addr);
-  if (buf2_ref.is_copy == TRUE) delete_value((moon_value *) buf2_ref.value_addr);
+  if (bufb_ref.is_copy == TRUE) delete_value((moon_value *) bufb_ref.value_addr);
+  if (bufc_ref.is_copy == TRUE) delete_value((moon_value *) bufc_ref.value_addr);
 }
 
 static void op_closure(moon_instruction * instruction, moon_closure * closure) {
@@ -512,6 +532,17 @@ static void op_closure(moon_instruction * instruction, moon_closure * closure) {
   closure->registers[instruction->a]->value_addr = (SRAM_ADDRESS) sub_closure;
   closure->registers[instruction->a]->is_progmem = FALSE;
   closure->registers[instruction->a]->is_copy = FALSE;
+}
+
+static void op_settabup(moon_instruction * instruction, moon_closure * closure) {
+  moon_reference bufb_ref;
+  moon_reference bufc_ref;
+
+  copy_op_bufs(&bufb_ref, &bufc_ref, instruction, closure);
+  set_hash_pair(&(closure->up_values), &bufb_ref, &bufc_ref);
+
+  if (bufb_ref.is_copy == TRUE) delete_value((moon_value *) bufb_ref.value_addr);
+  if (bufc_ref.is_copy == TRUE) delete_value((moon_value *) bufc_ref.value_addr);
 }
 
 static void run_instruction(moon_instruction * instruction, moon_closure * closure) {
@@ -546,6 +577,10 @@ static void run_instruction(moon_instruction * instruction, moon_closure * closu
     case OPCODE_CLOSURE:
       op_closure(instruction, closure);
       break;
+    case OPCODE_SETTABUP:
+      op_settabup(instruction, closure);
+      break;
+
     case OPCODE_RETURN:
       // @TODO : manage return value
       break;
