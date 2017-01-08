@@ -313,6 +313,14 @@ static void create_op_bufs(moon_reference * buf1_ref, moon_reference * buf2_ref,
   }
 }
 
+static void run_instruction(moon_closure * closure, uint16_t index);
+
+static void run_closure(moon_closure * closure) {
+  for (uint16_t index = 0; index < closure->prototype->instructions_count; ++index) {
+    run_instruction(closure, index);
+  }
+}
+
 static void op_loadnil(moon_instruction * instruction, moon_closure * closure) {
   set_to_nil(closure->registers[instruction->a]);
 }
@@ -450,10 +458,7 @@ void moon_run(PGMEM_ADDRESS prototype_addr, char * result) {
   moon_reference buf_ref;
 
   init_closure(closure, prototype_addr);
-
-  for (uint16_t index = 0; index < closure->prototype->instructions_count; ++index) {
-    run_instruction(closure, index);
-  }
+  run_closure(closure);
 
   create_value_copy(&buf_ref, closure->registers[0]);
 
