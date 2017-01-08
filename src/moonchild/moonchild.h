@@ -161,6 +161,7 @@ typedef struct {
   uint16_t nodes;
   moon_hash up_values;
   PGMEM_ADDRESS prototype_addr;
+  uint16_t prototype_addr_cursor;
   moon_reference * registers[MOON_MAX_REGISTERS];
   moon_reference result;
 } moon_closure;

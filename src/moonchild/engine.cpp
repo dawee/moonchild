@@ -30,11 +30,13 @@ static void set_to_false(moon_reference * reference) {
 static void init_registers(moon_closure * closure);
 static void init_hash(moon_hash * hash);
 
-static moon_closure * create_closure(PGMEM_ADDRESS prototype_addr) {
+static moon_closure * create_closure(PGMEM_ADDRESS prototype_addr, uint16_t prototype_addr_cursor = 0) {
   moon_closure * closure = (moon_closure *) malloc(sizeof(moon_closure));
 
   closure->type = LUA_CLOSURE;
+  closure->nodes = 0;
   closure->prototype_addr = prototype_addr;
+  closure->prototype_addr_cursor = prototype_addr_cursor;
 
   init_hash(&(closure->up_values));
   init_registers(closure);
@@ -126,7 +128,7 @@ static void read_constant_reference(moon_reference * reference, moon_prototype *
 }
 
 static void read_closure_prototype(moon_prototype * prototype, moon_closure * closure) {
-  progmem_cpy(prototype, closure->prototype_addr, sizeof(moon_prototype));
+  progmem_cpy(prototype, closure->prototype_addr, sizeof(moon_prototype), sizeof(moon_prototype) * closure->prototype_addr_cursor);
 }
 
 static void init_hash(moon_hash * hash) {
@@ -539,11 +541,9 @@ static void op_concat(moon_instruction * instruction, moon_closure * closure) {
 static void op_closure(moon_instruction * instruction, moon_closure * closure) {
   moon_closure * sub_closure;
   moon_prototype prototype;
-  PGMEM_ADDRESS prototype_addr;
 
   read_closure_prototype(&prototype, closure);
-  prototype_addr = prototype.prototypes_addr + (sizeof(moon_prototype) * instruction->b);
-  sub_closure = create_closure(prototype_addr);
+  sub_closure = create_closure(prototype.prototypes_addr, instruction->b);
 
   closure->registers[instruction->a]->value_addr = (SRAM_ADDRESS) sub_closure;
   closure->registers[instruction->a]->is_progmem = FALSE;
