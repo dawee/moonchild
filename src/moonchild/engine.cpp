@@ -436,6 +436,20 @@ static void op_concat(moon_instruction * instruction, moon_closure * closure) {
   if (buf2_ref.is_copy == TRUE) delete_value((moon_value *) buf2_ref.value_addr);
 }
 
+static void op_closure(moon_instruction * instruction, moon_closure * closure) {
+  moon_closure * sub_closure;
+  moon_prototype prototype;
+  PGMEM_ADDRESS prototype_addr;
+
+  read_closure_prototype(&prototype, closure);
+  prototype_addr = prototype.prototypes_addr + (sizeof(moon_prototype) * instruction->b);
+  sub_closure = create_closure(prototype_addr);
+
+  closure->registers[instruction->a]->value_addr = (SRAM_ADDRESS) sub_closure;
+  closure->registers[instruction->a]->is_progmem = FALSE;
+  closure->registers[instruction->a]->is_copy = FALSE;
+}
+
 static void run_instruction(moon_instruction * instruction, moon_closure * closure) {
   switch(instruction->opcode) {
     case OPCODE_LOADNIL:
@@ -464,6 +478,9 @@ static void run_instruction(moon_instruction * instruction, moon_closure * closu
       break;
     case OPCODE_CONCAT:
       op_concat(instruction, closure);
+      break;
+    case OPCODE_CLOSURE:
+      op_closure(instruction, closure);
       break;
     case OPCODE_RETURN:
       // @TODO : manage return value
