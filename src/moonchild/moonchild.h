@@ -88,6 +88,7 @@ enum MOON_TYPES {
   LUA_INT,
   LUA_NUMBER,
   LUA_STRING,
+  LUA_CLOSURE,
 };
 
 typedef int16_t CTYPE_LUA_INT;
@@ -144,6 +145,8 @@ typedef struct {
 } moon_prototype;
 
 typedef struct {
+  uint8_t type;
+  uint16_t nodes;
   PGMEM_ADDRESS prototype_addr;
   moon_reference * registers[MOON_MAX_REGISTERS];
 } moon_closure;

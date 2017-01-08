@@ -17,6 +17,7 @@ static void init_registers(moon_closure * closure);
 static moon_closure * create_closure(PGMEM_ADDRESS prototype_addr) {
   moon_closure * closure = (moon_closure *) malloc(sizeof(moon_closure));
 
+  closure->type = LUA_CLOSURE;
   closure->prototype_addr = prototype_addr;
   init_registers(closure);
 
