@@ -162,6 +162,7 @@ typedef struct {
   moon_hash up_values;
   PGMEM_ADDRESS prototype_addr;
   moon_reference * registers[MOON_MAX_REGISTERS];
+  moon_reference result;
 } moon_closure;
 
 

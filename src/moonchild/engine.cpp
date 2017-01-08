@@ -12,6 +12,21 @@ static void progmem_cpy(void * dest, PGMEM_ADDRESS src, uint16_t size, uint16_t 
   }
 }
 
+static void set_to_nil(moon_reference * reference) {
+  reference->is_progmem = TRUE;
+  reference->value_addr = (SRAM_ADDRESS) &MOON_NIL_VALUE;
+}
+
+static void set_to_true(moon_reference * reference) {
+  reference->is_progmem = TRUE;
+  reference->value_addr = (SRAM_ADDRESS) &MOON_TRUE_VALUE;
+}
+
+static void set_to_false(moon_reference * reference) {
+  reference->is_progmem = TRUE;
+  reference->value_addr = (SRAM_ADDRESS) &MOON_FALSE_VALUE;
+}
+
 static void init_registers(moon_closure * closure);
 static void init_hash(moon_hash * hash);
 
@@ -21,8 +36,9 @@ static moon_closure * create_closure(PGMEM_ADDRESS prototype_addr) {
   closure->type = LUA_CLOSURE;
   closure->prototype_addr = prototype_addr;
 
-  init_hash(&closure->up_values);
+  init_hash(&(closure->up_values));
   init_registers(closure);
+  set_to_nil(&(closure->result));
 
   return closure;
 }
@@ -108,21 +124,6 @@ static void read_constant_reference(moon_reference * reference, moon_prototype *
 
 static void read_closure_prototype(moon_prototype * prototype, moon_closure * closure) {
   progmem_cpy(prototype, closure->prototype_addr, sizeof(moon_prototype));
-}
-
-static void set_to_nil(moon_reference * reference) {
-  reference->is_progmem = TRUE;
-  reference->value_addr = (SRAM_ADDRESS) &MOON_NIL_VALUE;
-}
-
-static void set_to_true(moon_reference * reference) {
-  reference->is_progmem = TRUE;
-  reference->value_addr = (SRAM_ADDRESS) &MOON_TRUE_VALUE;
-}
-
-static void set_to_false(moon_reference * reference) {
-  reference->is_progmem = TRUE;
-  reference->value_addr = (SRAM_ADDRESS) &MOON_FALSE_VALUE;
 }
 
 static void init_hash(moon_hash * hash) {
@@ -439,7 +440,7 @@ static void copy_to_params(moon_closure * closure, moon_closure * sub_closure, u
   read_closure_prototype(&sub_prototype, sub_closure);
 
   for (uint16_t index = 0; index < count; ++index) {
-    create_value_copy(sub_closure->registers[index], closure->registers[prototype.max_stack_size - index - 1]);
+    copy_reference(sub_closure->registers[index], closure->registers[prototype.max_stack_size - index - 1]);
   }
 }
 
@@ -652,10 +653,9 @@ static void run_instruction(moon_instruction * instruction, moon_closure * closu
 void moon_run(PGMEM_ADDRESS prototype_addr, char * result) {
   moon_closure * closure = create_closure(prototype_addr);
   moon_reference buf_ref;
-  moon_reference buf_ref2;
 
   run_closure(closure);
-  create_value_copy(&buf_ref, closure->registers[0]);
+  create_value_copy(&buf_ref, &(closure->result));
 
   switch(((moon_value *) buf_ref.value_addr)->type) {
     case LUA_NIL:
