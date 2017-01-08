@@ -133,7 +133,7 @@ static void set_hash_pair(moon_hash * hash, moon_reference * key_reference, moon
   moon_hash_pair * pair = (moon_hash_pair *) malloc(sizeof(moon_hash_pair));
 
   create_value_copy(&(pair->key_reference), key_reference);
-  copy_reference(&(pair->value_reference), value_reference); 
+  copy_reference(&(pair->value_reference), value_reference);
 
   if (hash->count == 0) {
     hash->first = pair;
@@ -545,6 +545,25 @@ static void op_settabup(moon_instruction * instruction, moon_closure * closure) 
   if (bufc_ref.is_copy == TRUE) delete_value((moon_value *) bufc_ref.value_addr);
 }
 
+static void op_gettabup(moon_instruction * instruction, moon_closure * closure) {
+  moon_reference bufc_ref;
+  moon_reference const_ref;
+  moon_prototype prototype;
+
+  read_closure_prototype(&prototype, closure);
+
+  if ((instruction->flag & OPCK_FLAG) == OPCK_FLAG) {
+    read_constant_reference(&const_ref, &prototype, instruction->c);
+    copy_reference(&bufc_ref, &const_ref);
+  } else {
+    copy_reference(&bufc_ref, closure->registers[instruction->c]);
+  }
+
+  find_hash_value(closure->registers[instruction->a], &(closure->up_values), &bufc_ref);
+
+  if (bufc_ref.is_copy == TRUE) delete_value((moon_value *) bufc_ref.value_addr);
+}
+
 static void run_instruction(moon_instruction * instruction, moon_closure * closure) {
   switch(instruction->opcode) {
     case OPCODE_LOADNIL:
@@ -579,6 +598,9 @@ static void run_instruction(moon_instruction * instruction, moon_closure * closu
       break;
     case OPCODE_SETTABUP:
       op_settabup(instruction, closure);
+      break;
+    case OPCODE_GETTABUP:
+      op_gettabup(instruction, closure);
       break;
 
     case OPCODE_RETURN:
