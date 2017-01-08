@@ -12,8 +12,13 @@ static void progmem_cpy(void * dest, PGMEM_ADDRESS src, uint16_t size, uint16_t 
   }
 }
 
-static moon_closure * create_closure() {
-  return (moon_closure *) malloc(sizeof(moon_closure));
+static void init_closure(moon_closure * closure, PGMEM_ADDRESS prototype_addr);
+
+static moon_closure * create_closure(PGMEM_ADDRESS prototype_addr) {
+  moon_closure * closure = (moon_closure *) malloc(sizeof(moon_closure));
+
+  init_closure(closure, prototype_addr);
+  return closure;
 }
 
 static moon_prototype * create_prototype() {
@@ -125,6 +130,12 @@ static void create_register(moon_closure * closure, uint16_t index) {
 }
 
 static void init_registers(moon_closure * closure) {
+  for (uint16_t index = 0; index < MOON_MAX_REGISTERS; ++index) {
+    closure->registers[index] = NULL;
+  }
+}
+
+static void create_registers(moon_closure * closure) {
   for (uint16_t index = 0; index < closure->prototype->max_stack_size; ++index) {
     create_register(closure, index);
   }
@@ -316,6 +327,8 @@ static void create_op_bufs(moon_reference * buf1_ref, moon_reference * buf2_ref,
 static void run_instruction(moon_closure * closure, uint16_t index);
 
 static void run_closure(moon_closure * closure) {
+  create_registers(closure);
+
   for (uint16_t index = 0; index < closure->prototype->instructions_count; ++index) {
     run_instruction(closure, index);
   }
@@ -454,12 +467,10 @@ static void run_instruction(moon_closure * closure, uint16_t index) {
 
 
 void moon_run(PGMEM_ADDRESS prototype_addr, char * result) {
-  moon_closure * closure = create_closure();
+  moon_closure * closure = create_closure(prototype_addr);
   moon_reference buf_ref;
 
-  init_closure(closure, prototype_addr);
   run_closure(closure);
-
   create_value_copy(&buf_ref, closure->registers[0]);
 
   switch(((moon_value *) buf_ref.value_addr)->type) {
