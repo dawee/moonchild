@@ -133,8 +133,8 @@ typedef struct {
 } moon_reference;
 
 typedef struct moon_hash_pair_t {
-  moon_reference key;
-  moon_reference value;
+  moon_reference key_reference;
+  moon_reference value_reference;
   struct moon_hash_pair_t * next;
 } moon_hash_pair;
 

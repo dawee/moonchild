@@ -12,11 +12,8 @@ static void progmem_cpy(void * dest, PGMEM_ADDRESS src, uint16_t size, uint16_t 
   }
 }
 
-static void init_hash(moon_hash * hash) {
-  hash->count = 0;
-}
-
 static void init_registers(moon_closure * closure);
+static void init_hash(moon_hash * hash);
 
 static moon_closure * create_closure(PGMEM_ADDRESS prototype_addr) {
   moon_closure * closure = (moon_closure *) malloc(sizeof(moon_closure));
@@ -127,6 +124,67 @@ static void set_to_false(moon_reference * reference) {
   reference->is_progmem = TRUE;
   reference->value_addr = (SRAM_ADDRESS) &MOON_FALSE_VALUE;
 }
+
+static void init_hash(moon_hash * hash) {
+  hash->count = 0;
+}
+
+static void set_hash_pair(moon_hash * hash, moon_reference * key_reference, moon_reference * value_reference) {
+  moon_hash_pair * pair = (moon_hash_pair *) malloc(sizeof(moon_hash_pair));
+
+  create_value_copy(&(pair->key_reference), key_reference);
+  copy_reference(&(pair->value_reference), value_reference); 
+
+  if (hash->count == 0) {
+    hash->first = pair;
+  } else {
+    hash->last->next = pair;
+  }
+
+  hash->last = pair;
+  hash->count++;
+}
+
+static void find_hash_value(moon_reference * result, moon_hash * hash, moon_reference * key_reference) {
+  BOOL found;
+  char * key_str;
+  char * input_key_str;
+  moon_string_value * key_as_val;
+  moon_reference buf_ref;
+  moon_hash_pair * pair = hash->first;
+  moon_string_value * input_key_as_val;
+
+  set_to_nil(result);
+  create_value_copy(&buf_ref, key_reference);
+
+  input_key_as_val = (moon_string_value *) buf_ref.value_addr;
+  input_key_str = (char *) input_key_as_val->string_addr;
+
+  for (uint16_t index = 0; index < hash->count; ++index) {
+    key_as_val = (moon_string_value *) (pair->key_reference).value_addr;
+    key_str = (char *) key_as_val->string_addr;
+    found = TRUE;
+
+    if (key_as_val->length != input_key_as_val->length) continue;
+
+    for (uint16_t car_index = 0; car_index < input_key_as_val->length; ++car_index) {
+      if (key_str[car_index] != input_key_str[car_index]) {
+        found = FALSE;
+        break;
+      }
+    }
+
+    if (found == TRUE) {
+      copy_reference(result, &(pair->value_reference));
+      break;
+    }
+
+    pair = pair->next;
+  }
+
+  if (buf_ref.is_copy == TRUE) delete_value((moon_value *) buf_ref.value_addr);
+}
+
 
 static void copy_constant_reference(moon_reference * dest, moon_prototype * prototype, uint16_t index) {
   moon_reference constant_reference;
@@ -503,6 +561,7 @@ static void run_instruction(moon_instruction * instruction, moon_closure * closu
 void moon_run(PGMEM_ADDRESS prototype_addr, char * result) {
   moon_closure * closure = create_closure(prototype_addr);
   moon_reference buf_ref;
+  moon_reference buf_ref2;
 
   run_closure(closure);
   create_value_copy(&buf_ref, closure->registers[0]);
