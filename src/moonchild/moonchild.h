@@ -144,7 +144,7 @@ typedef struct {
 } moon_prototype;
 
 typedef struct {
-  moon_prototype * prototype;
+  PGMEM_ADDRESS prototype_addr;
   moon_reference * registers[MOON_MAX_REGISTERS];
 } moon_closure;
 

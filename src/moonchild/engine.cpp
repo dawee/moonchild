@@ -12,12 +12,14 @@ static void progmem_cpy(void * dest, PGMEM_ADDRESS src, uint16_t size, uint16_t 
   }
 }
 
-static void init_closure(moon_closure * closure, PGMEM_ADDRESS prototype_addr);
+static void init_registers(moon_closure * closure);
 
 static moon_closure * create_closure(PGMEM_ADDRESS prototype_addr) {
   moon_closure * closure = (moon_closure *) malloc(sizeof(moon_closure));
 
-  init_closure(closure, prototype_addr);
+  closure->prototype_addr = prototype_addr;
+  init_registers(closure);
+
   return closure;
 }
 
@@ -100,6 +102,10 @@ static void read_constant_reference(moon_reference * reference, moon_prototype *
   progmem_cpy(reference, prototype->constants_addr, sizeof(moon_reference), sizeof(moon_reference) * index);
 }
 
+static void read_closure_prototype(moon_prototype * prototype, moon_closure * closure) {
+  progmem_cpy(prototype, closure->prototype_addr, sizeof(moon_prototype));
+}
+
 static void set_to_nil(moon_reference * reference) {
   reference->is_progmem = TRUE;
   reference->value_addr = (SRAM_ADDRESS) &MOON_NIL_VALUE;
@@ -136,19 +142,17 @@ static void init_registers(moon_closure * closure) {
 }
 
 static void create_registers(moon_closure * closure) {
-  for (uint16_t index = 0; index < closure->prototype->max_stack_size; ++index) {
+  moon_prototype prototype;
+
+  read_closure_prototype(&prototype, closure);
+
+  for (uint16_t index = 0; index < prototype.max_stack_size; ++index) {
     create_register(closure, index);
   }
 }
 
 static void init_prototype(moon_prototype * prototype, PGMEM_ADDRESS prototype_addr) {
   progmem_cpy(prototype, prototype_addr, sizeof(moon_prototype));
-}
-
-static void init_closure(moon_closure * closure, PGMEM_ADDRESS prototype_addr) {
-  closure->prototype = create_prototype();
-  init_prototype(closure->prototype, prototype_addr);
-  init_registers(closure);
 }
 
 static BOOL check_arithmetic_values(moon_value * value_a, moon_value * value_b) {
@@ -309,13 +313,16 @@ static void create_op_concat_result(moon_reference * result, moon_value * value_
 
 static void create_op_bufs(moon_reference * buf1_ref, moon_reference * buf2_ref, moon_instruction * instruction, moon_closure * closure) {
   moon_reference const_ref;
+  moon_prototype prototype;
+
+  read_closure_prototype(&prototype, closure);
 
   if ((instruction->flag & OPCK_FLAG) == OPCK_FLAG) {
     create_value_copy(buf1_ref, closure->registers[instruction->b]);
-    read_constant_reference(&const_ref, closure->prototype, instruction->c);
+    read_constant_reference(&const_ref, &prototype, instruction->c);
     create_value_copy(buf2_ref, &const_ref);
   } else if ((instruction->flag & OPBK_FLAG) == OPBK_FLAG) {
-    read_constant_reference(&const_ref, closure->prototype, instruction->b);
+    read_constant_reference(&const_ref, &prototype, instruction->b);
     create_value_copy(buf1_ref, &const_ref);
     create_value_copy(buf2_ref, closure->registers[instruction->c]);
   } else {
@@ -324,13 +331,18 @@ static void create_op_bufs(moon_reference * buf1_ref, moon_reference * buf2_ref,
   }
 }
 
-static void run_instruction(moon_closure * closure, uint16_t index);
+static void run_instruction(moon_instruction * instruction, moon_closure * closure);
 
 static void run_closure(moon_closure * closure) {
+  moon_prototype prototype;
+  moon_instruction instruction;
+
+  read_closure_prototype(&prototype, closure);
   create_registers(closure);
 
-  for (uint16_t index = 0; index < closure->prototype->instructions_count; ++index) {
-    run_instruction(closure, index);
+  for (uint16_t index = 0; index < prototype.instructions_count; ++index) {
+    read_instruction(&instruction, &prototype, index);
+    run_instruction(&instruction, closure);
   }
 }
 
@@ -347,9 +359,11 @@ static void op_loadbool(moon_instruction * instruction, moon_closure * closure) 
 }
 
 static void op_loadk(moon_instruction * instruction, moon_closure * closure) {
+  moon_prototype prototype;
   moon_reference const_ref;
 
-  read_constant_reference(&const_ref, closure->prototype, instruction->b);
+  read_closure_prototype(&prototype, closure);
+  read_constant_reference(&const_ref, &prototype, instruction->b);
   copy_reference(closure->registers[instruction->a], &const_ref);
 }
 
@@ -421,45 +435,41 @@ static void op_concat(moon_instruction * instruction, moon_closure * closure) {
   if (buf2_ref.is_copy == TRUE) delete_value((moon_value *) buf2_ref.value_addr);
 }
 
-static void run_instruction(moon_closure * closure, uint16_t index) {
-  moon_instruction instruction;
-
-  read_instruction(&instruction, closure->prototype, index);
-
-  switch(instruction.opcode) {
+static void run_instruction(moon_instruction * instruction, moon_closure * closure) {
+  switch(instruction->opcode) {
     case OPCODE_LOADNIL:
-      op_loadnil(&instruction, closure);
+      op_loadnil(instruction, closure);
       break;
     case OPCODE_LOADBOOL:
-      op_loadbool(&instruction, closure);
+      op_loadbool(instruction, closure);
       break;
     case OPCODE_LOADK:
-      op_loadk(&instruction, closure);
+      op_loadk(instruction, closure);
       break;
     case OPCODE_ADD:
-      op_add(&instruction, closure);
+      op_add(instruction, closure);
       break;
     case OPCODE_SUB:
-      op_sub(&instruction, closure);
+      op_sub(instruction, closure);
       break;
     case OPCODE_MUL:
-      op_mul(&instruction, closure);
+      op_mul(instruction, closure);
       break;
     case OPCODE_DIV:
-      op_div(&instruction, closure);
+      op_div(instruction, closure);
       break;
     case OPCODE_MOVE:
-      op_move(&instruction, closure);
+      op_move(instruction, closure);
       break;
     case OPCODE_CONCAT:
-      op_concat(&instruction, closure);
+      op_concat(instruction, closure);
       break;
     case OPCODE_RETURN:
       // @TODO : manage return value
       break;
 
     default:
-      moon_debug("unknown upcode : %d\n", instruction.opcode);
+      moon_debug("unknown upcode : %d\n", instruction->opcode);
       break;
   };
 
