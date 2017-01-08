@@ -125,8 +125,8 @@ static void create_register(moon_closure * closure, uint16_t index) {
 }
 
 static void init_registers(moon_closure * closure) {
-  for (uint16_t index = 0; index < MOON_MAX_REGISTERS; ++index) {
-    closure->registers[index] = NULL;
+  for (uint16_t index = 0; index < closure->prototype->max_stack_size; ++index) {
+    create_register(closure, index);
   }
 }
 
@@ -314,16 +314,10 @@ static void create_op_bufs(moon_reference * buf1_ref, moon_reference * buf2_ref,
 }
 
 static void op_loadnil(moon_instruction * instruction, moon_closure * closure) {
-  moon_reference const_ref;
-
-  create_register(closure, instruction->a);
+  set_to_nil(closure->registers[instruction->a]);
 }
 
 static void op_loadbool(moon_instruction * instruction, moon_closure * closure) {
-  moon_reference const_ref;
-
-  create_register(closure, instruction->a);
-
   if (instruction->b == 1) {
     set_to_true(closure->registers[instruction->a]);
   } else {
@@ -334,7 +328,6 @@ static void op_loadbool(moon_instruction * instruction, moon_closure * closure) 
 static void op_loadk(moon_instruction * instruction, moon_closure * closure) {
   moon_reference const_ref;
 
-  create_register(closure, instruction->a);
   read_constant_reference(&const_ref, closure->prototype, instruction->b);
   copy_reference(closure->registers[instruction->a], &const_ref);
 }
@@ -343,7 +336,6 @@ static void op_add(moon_instruction * instruction, moon_closure * closure) {
   moon_reference buf1_ref;
   moon_reference buf2_ref;
 
-  create_register(closure, instruction->a);
   create_op_bufs(&buf1_ref, &buf2_ref, instruction, closure);
   create_op_add_result(closure->registers[instruction->a], (moon_value *) buf1_ref.value_addr, (moon_value *) buf2_ref.value_addr);
   closure->registers[instruction->a]->is_progmem = FALSE;
@@ -356,7 +348,6 @@ static void op_sub(moon_instruction * instruction, moon_closure * closure) {
   moon_reference buf1_ref;
   moon_reference buf2_ref;
 
-  create_register(closure, instruction->a);
   create_op_bufs(&buf1_ref, &buf2_ref, instruction, closure);
   create_op_sub_result(closure->registers[instruction->a], (moon_value *) buf1_ref.value_addr, (moon_value *) buf2_ref.value_addr);
   closure->registers[instruction->a]->is_progmem = FALSE;
@@ -369,7 +360,6 @@ static void op_mul(moon_instruction * instruction, moon_closure * closure) {
   moon_reference buf1_ref;
   moon_reference buf2_ref;
 
-  create_register(closure, instruction->a);
   create_op_bufs(&buf1_ref, &buf2_ref, instruction, closure);
   create_op_mul_result(closure->registers[instruction->a], (moon_value *) buf1_ref.value_addr, (moon_value *) buf2_ref.value_addr);
   closure->registers[instruction->a]->is_progmem = FALSE;
@@ -382,7 +372,6 @@ static void op_div(moon_instruction * instruction, moon_closure * closure) {
   moon_reference buf1_ref;
   moon_reference buf2_ref;
 
-  create_register(closure, instruction->a);
   create_op_bufs(&buf1_ref, &buf2_ref, instruction, closure);
   create_op_div_result(closure->registers[instruction->a], (moon_value *) buf1_ref.value_addr, (moon_value *) buf2_ref.value_addr);
   closure->registers[instruction->a]->is_progmem = FALSE;
@@ -392,7 +381,6 @@ static void op_div(moon_instruction * instruction, moon_closure * closure) {
 }
 
 static void op_move(moon_instruction * instruction, moon_closure * closure) {
-  create_register(closure, instruction->a);
   copy_reference(closure->registers[instruction->a], closure->registers[instruction->b]);
 
   if (! closure->registers[instruction->a]->is_progmem) {
@@ -404,7 +392,6 @@ static void op_concat(moon_instruction * instruction, moon_closure * closure) {
   moon_reference buf1_ref;
   moon_reference buf2_ref;
 
-  create_register(closure, instruction->a);
   create_op_bufs(&buf1_ref, &buf2_ref, instruction, closure);
   create_op_concat_result(closure->registers[instruction->a], (moon_value *) buf1_ref.value_addr, (moon_value *) buf2_ref.value_addr);
   closure->registers[instruction->a]->is_progmem = FALSE;
