@@ -564,6 +564,22 @@ static void op_gettabup(moon_instruction * instruction, moon_closure * closure) 
   if (bufc_ref.is_copy == TRUE) delete_value((moon_value *) bufc_ref.value_addr);
 }
 
+static void op_call(moon_instruction * instruction, moon_closure * closure) {
+  moon_closure * sub_closure;
+  moon_reference bufa_ref;
+
+  if (((moon_value *) closure->registers[instruction->a]->value_addr)->type != LUA_CLOSURE) {
+    moon_debug("error: trying to call a non closure type");
+    return;
+  }
+
+  sub_closure = (moon_closure *) closure->registers[instruction->a]->value_addr;
+
+  run_closure(sub_closure);
+
+  if (bufa_ref.is_copy == TRUE) delete_value((moon_value *) bufa_ref.value_addr);
+}
+
 static void run_instruction(moon_instruction * instruction, moon_closure * closure) {
   switch(instruction->opcode) {
     case OPCODE_LOADNIL:
@@ -601,6 +617,9 @@ static void run_instruction(moon_instruction * instruction, moon_closure * closu
       break;
     case OPCODE_GETTABUP:
       op_gettabup(instruction, closure);
+      break;
+    case OPCODE_CALL:
+      op_call(instruction, closure);
       break;
 
     case OPCODE_RETURN:
