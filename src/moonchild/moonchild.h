@@ -159,6 +159,8 @@ typedef struct {
 typedef struct {
   uint8_t type;
   uint16_t nodes;
+  uint16_t top;
+  uint16_t base;
   moon_hash up_values;
   PGMEM_ADDRESS prototype_addr;
   uint16_t prototype_addr_cursor;

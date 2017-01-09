@@ -485,15 +485,15 @@ static void run_closure(moon_closure * closure) {
   }
 }
 
-static void copy_to_params(moon_closure * closure, moon_closure * sub_closure, uint16_t count) {
+static void copy_to_params(moon_closure * closure, moon_closure * sub_closure) {
   moon_prototype prototype;
   moon_prototype sub_prototype;
 
   read_closure_prototype(&prototype, closure);
   read_closure_prototype(&sub_prototype, sub_closure);
 
-  for (uint16_t index = 0; index < count; ++index) {
-    copy_reference(sub_closure->registers[index], closure->registers[prototype.max_stack_size - index - 1]);
+  for (uint16_t index = 0; index < (closure->top - closure->base); ++index) {
+    copy_reference(sub_closure->registers[index], closure->registers[closure->base + index]);
   }
 }
 
@@ -641,15 +641,20 @@ static void op_call(moon_instruction * instruction, moon_closure * closure) {
 
   create_registers(sub_closure);
 
-  if (instruction->b > 1) {
-    copy_to_params(closure, sub_closure, instruction->b - 1);
+  closure->base = instruction->a + 1;
+
+  if (instruction->b != 1) {
+    if (instruction->b > 1) closure->top = closure->base + (instruction->b - 1);
+
+    copy_to_params(closure, sub_closure);
   }
 
   run_closure(sub_closure);
 
-  if (instruction->c > 1) {
+  if (instruction->c != 1) {
     // @TODO : manage multiple results (c > 2)
     copy_reference(closure->registers[instruction->a], &(sub_closure->result));
+    if (instruction->c == 0) closure->top = instruction->a + 1;
   }
 
   delete_registers(sub_closure);
