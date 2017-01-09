@@ -123,6 +123,40 @@ static void create_value_copy(moon_reference * dest, moon_reference * src) {
   }
 }
 
+static void ref_to_str(char * result, moon_reference * reference) {
+  moon_reference buf_ref;
+
+  create_value_copy(&buf_ref, reference);
+
+  switch(((moon_value *) buf_ref.value_addr)->type) {
+    case LUA_NIL:
+      sprintf(result, "nil\n");
+      break;
+    case LUA_FALSE:
+      sprintf(result, "false\n");
+      break;
+    case LUA_TRUE:
+      sprintf(result, "true\n");
+      break;
+    case LUA_INT:
+      sprintf(result, "%d\n", ((moon_int_value *) buf_ref.value_addr)->val);
+      break;
+    case LUA_NUMBER:
+      sprintf(result, "~%d\n", (int)((moon_number_value *) buf_ref.value_addr)->val);
+      break;
+    case LUA_STRING:
+      sprintf(result, "%s\n", (char *)(((moon_string_value *) buf_ref.value_addr)->string_addr));
+      break;
+
+    default:
+      sprintf(result, "other type : %d\n", ((moon_value *) buf_ref.value_addr)->type);
+      break;
+  };
+
+  if (buf_ref.is_copy == TRUE) delete_value((moon_value *) buf_ref.value_addr);
+}
+
+
 static void read_constant_reference(moon_reference * reference, moon_prototype * prototype, uint16_t index) {
   progmem_cpy(reference, prototype->constants_addr, sizeof(moon_reference), sizeof(moon_reference) * index);
 }
@@ -685,35 +719,7 @@ static void run_instruction(moon_instruction * instruction, moon_closure * closu
 
 void moon_run(PGMEM_ADDRESS prototype_addr, char * result) {
   moon_closure * closure = create_closure(prototype_addr);
-  moon_reference buf_ref;
 
   run_closure(closure);
-  create_value_copy(&buf_ref, &(closure->result));
-
-  switch(((moon_value *) buf_ref.value_addr)->type) {
-    case LUA_NIL:
-      sprintf(result, "nil\n");
-      break;
-    case LUA_FALSE:
-      sprintf(result, "false\n");
-      break;
-    case LUA_TRUE:
-      sprintf(result, "true\n");
-      break;
-    case LUA_INT:
-      sprintf(result, "%d\n", ((moon_int_value *) buf_ref.value_addr)->val);
-      break;
-    case LUA_NUMBER:
-      sprintf(result, "~%d\n", (int)((moon_number_value *) buf_ref.value_addr)->val);
-      break;
-    case LUA_STRING:
-      sprintf(result, "%s\n", (char *)(((moon_string_value *) buf_ref.value_addr)->string_addr));
-      break;
-
-    default:
-      sprintf(result, "other type : %d\n", ((moon_value *) buf_ref.value_addr)->type);
-      break;
-  };
-
-  if (buf_ref.is_copy == TRUE) delete_value((moon_value *) buf_ref.value_addr);
+  ref_to_str(result, &(closure->result));
 }
