@@ -222,6 +222,20 @@ static void create_registers(moon_closure * closure) {
   }
 }
 
+static void delete_registers(moon_closure * closure) {
+  moon_prototype prototype;
+
+  read_closure_prototype(&prototype, closure);
+
+  for (uint16_t index = 0; index < prototype.max_stack_size; ++index) {
+    if (closure->registers[index] != NULL) {
+      free(closure->registers[index]);
+      closure->registers[index] = NULL;
+    }
+  }
+}
+
+
 static void init_prototype(moon_prototype * prototype, PGMEM_ADDRESS prototype_addr) {
   progmem_cpy(prototype, prototype_addr, sizeof(moon_prototype));
 }
@@ -603,6 +617,9 @@ static void op_call(moon_instruction * instruction, moon_closure * closure) {
     // @TODO : manage multiple results (c > 2)
     copy_reference(closure->registers[instruction->a], &(sub_closure->result));
   }
+
+  delete_registers(sub_closure);
+  set_to_nil(&(sub_closure->result));
 
   if (bufa_ref.is_copy == TRUE) delete_value((moon_value *) bufa_ref.value_addr);
 }
