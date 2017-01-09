@@ -598,7 +598,11 @@ static void op_call(moon_instruction * instruction, moon_closure * closure) {
   }
 
   run_closure(sub_closure);
-  copy_reference(closure->registers[instruction->a], &(sub_closure->result));
+
+  if (instruction->c > 1) {
+    // @TODO : manage multiple results (c > 2)
+    copy_reference(closure->registers[instruction->a], &(sub_closure->result));
+  }
 
   if (bufa_ref.is_copy == TRUE) delete_value((moon_value *) bufa_ref.value_addr);
 }
