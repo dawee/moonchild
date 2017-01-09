@@ -664,7 +664,7 @@ static void op_call(moon_instruction * instruction, moon_closure * closure) {
 }
 
 static void op_return(moon_instruction * instruction, moon_closure * closure) {
-  if (instruction->b != 2) return;  // @TODO : manage quitting closure behaviour
+  if (instruction->b == 1) return;  // @TODO : manage quitting closure behaviour
 
   copy_reference(&(closure->result), closure->registers[instruction->a]);
 }
@@ -707,6 +707,7 @@ static void run_instruction(moon_instruction * instruction, moon_closure * closu
     case OPCODE_GETTABUP:
       op_gettabup(instruction, closure);
       break;
+    case OPCODE_TAILCALL:  // WEAK, @TODO : real tailcall
     case OPCODE_CALL:
       op_call(instruction, closure);
       break;
