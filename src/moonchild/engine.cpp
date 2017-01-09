@@ -479,8 +479,10 @@ static void run_closure(moon_closure * closure) {
   read_closure_prototype(&prototype, closure);
   create_registers(closure);
 
-  for (uint16_t index = 0; index < prototype.instructions_count; ++index) {
-    read_instruction(&instruction, &prototype, index);
+  closure->pc = 0;
+
+  while(closure->pc < prototype.instructions_count) {
+    read_instruction(&instruction, &prototype, closure->pc);
     run_instruction(&instruction, closure);
   }
 }
@@ -720,6 +722,7 @@ static void run_instruction(moon_instruction * instruction, moon_closure * closu
       break;
   };
 
+  closure->pc++;
 }
 
 
