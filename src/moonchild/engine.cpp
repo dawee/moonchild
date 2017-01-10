@@ -504,7 +504,7 @@ static void op_loadnil(moon_instruction * instruction, moon_closure * closure) {
   uint16_t instruction_b = MOON_READ_B(instruction);
   uint16_t instruction_c = MOON_READ_C(instruction);
 
-  set_to_nil(closure->registers[instruction->a]);
+  set_to_nil(closure->registers[instruction_a]);
 }
 
 static void op_loadbool(moon_instruction * instruction, moon_closure * closure) {
@@ -514,9 +514,9 @@ static void op_loadbool(moon_instruction * instruction, moon_closure * closure) 
 
 
   if (instruction->b == 1) {
-    set_to_true(closure->registers[instruction->a]);
+    set_to_true(closure->registers[instruction_a]);
   } else {
-    set_to_false(closure->registers[instruction->a]);
+    set_to_false(closure->registers[instruction_a]);
   }
 }
 
@@ -529,7 +529,7 @@ static void op_loadk(moon_instruction * instruction, moon_closure * closure) {
 
   read_closure_prototype(&prototype, closure);
   read_constant_reference(&const_ref, &prototype, instruction->b);
-  copy_reference(closure->registers[instruction->a], &const_ref);
+  copy_reference(closure->registers[instruction_a], &const_ref);
 }
 
 static void op_add(moon_instruction * instruction, moon_closure * closure) {
@@ -541,8 +541,8 @@ static void op_add(moon_instruction * instruction, moon_closure * closure) {
   moon_reference bufc_ref;
 
   create_op_bufs(&bufb_ref, &bufc_ref, instruction, closure);
-  create_op_add_result(closure->registers[instruction->a], (moon_value *) bufb_ref.value_addr, (moon_value *) bufc_ref.value_addr);
-  closure->registers[instruction->a]->is_progmem = FALSE;
+  create_op_add_result(closure->registers[instruction_a], (moon_value *) bufb_ref.value_addr, (moon_value *) bufc_ref.value_addr);
+  closure->registers[instruction_a]->is_progmem = FALSE;
 
   if (bufb_ref.is_copy == TRUE) delete_value((moon_value *) bufb_ref.value_addr);
   if (bufc_ref.is_copy == TRUE) delete_value((moon_value *) bufc_ref.value_addr);
@@ -557,8 +557,8 @@ static void op_sub(moon_instruction * instruction, moon_closure * closure) {
   moon_reference bufc_ref;
 
   create_op_bufs(&bufb_ref, &bufc_ref, instruction, closure);
-  create_op_sub_result(closure->registers[instruction->a], (moon_value *) bufb_ref.value_addr, (moon_value *) bufc_ref.value_addr);
-  closure->registers[instruction->a]->is_progmem = FALSE;
+  create_op_sub_result(closure->registers[instruction_a], (moon_value *) bufb_ref.value_addr, (moon_value *) bufc_ref.value_addr);
+  closure->registers[instruction_a]->is_progmem = FALSE;
 
   if (bufb_ref.is_copy == TRUE) delete_value((moon_value *) bufb_ref.value_addr);
   if (bufc_ref.is_copy == TRUE) delete_value((moon_value *) bufc_ref.value_addr);
@@ -573,8 +573,8 @@ static void op_mul(moon_instruction * instruction, moon_closure * closure) {
   moon_reference bufc_ref;
 
   create_op_bufs(&bufb_ref, &bufc_ref, instruction, closure);
-  create_op_mul_result(closure->registers[instruction->a], (moon_value *) bufb_ref.value_addr, (moon_value *) bufc_ref.value_addr);
-  closure->registers[instruction->a]->is_progmem = FALSE;
+  create_op_mul_result(closure->registers[instruction_a], (moon_value *) bufb_ref.value_addr, (moon_value *) bufc_ref.value_addr);
+  closure->registers[instruction_a]->is_progmem = FALSE;
 
   if (bufb_ref.is_copy == TRUE) delete_value((moon_value *) bufb_ref.value_addr);
   if (bufc_ref.is_copy == TRUE) delete_value((moon_value *) bufc_ref.value_addr);
@@ -589,8 +589,8 @@ static void op_div(moon_instruction * instruction, moon_closure * closure) {
   moon_reference bufc_ref;
 
   create_op_bufs(&bufb_ref, &bufc_ref, instruction, closure);
-  create_op_div_result(closure->registers[instruction->a], (moon_value *) bufb_ref.value_addr, (moon_value *) bufc_ref.value_addr);
-  closure->registers[instruction->a]->is_progmem = FALSE;
+  create_op_div_result(closure->registers[instruction_a], (moon_value *) bufb_ref.value_addr, (moon_value *) bufc_ref.value_addr);
+  closure->registers[instruction_a]->is_progmem = FALSE;
 
   if (bufb_ref.is_copy == TRUE) delete_value((moon_value *) bufb_ref.value_addr);
   if (bufc_ref.is_copy == TRUE) delete_value((moon_value *) bufc_ref.value_addr);
@@ -601,10 +601,10 @@ static void op_move(moon_instruction * instruction, moon_closure * closure) {
   uint16_t instruction_b = MOON_READ_B(instruction);
   uint16_t instruction_c = MOON_READ_C(instruction);
 
-  copy_reference(closure->registers[instruction->a], closure->registers[instruction->b]);
+  copy_reference(closure->registers[instruction_a], closure->registers[instruction->b]);
 
-  if (! closure->registers[instruction->a]->is_progmem) {
-    ((moon_value *) closure->registers[instruction->a])->nodes++;
+  if (! closure->registers[instruction_a]->is_progmem) {
+    ((moon_value *) closure->registers[instruction_a])->nodes++;
   }
 }
 
@@ -617,8 +617,8 @@ static void op_concat(moon_instruction * instruction, moon_closure * closure) {
   moon_reference bufc_ref;
 
   create_op_bufs(&bufb_ref, &bufc_ref, instruction, closure);
-  create_op_concat_result(closure->registers[instruction->a], (moon_value *) bufb_ref.value_addr, (moon_value *) bufc_ref.value_addr);
-  closure->registers[instruction->a]->is_progmem = FALSE;
+  create_op_concat_result(closure->registers[instruction_a], (moon_value *) bufb_ref.value_addr, (moon_value *) bufc_ref.value_addr);
+  closure->registers[instruction_a]->is_progmem = FALSE;
 
   if (bufb_ref.is_copy == TRUE) delete_value((moon_value *) bufb_ref.value_addr);
   if (bufc_ref.is_copy == TRUE) delete_value((moon_value *) bufc_ref.value_addr);
@@ -634,9 +634,9 @@ static void op_closure(moon_instruction * instruction, moon_closure * closure) {
   read_closure_prototype(&prototype, closure);
   sub_closure = create_closure(prototype.prototypes_addr, instruction->b);
 
-  closure->registers[instruction->a]->value_addr = (SRAM_ADDRESS) sub_closure;
-  closure->registers[instruction->a]->is_progmem = FALSE;
-  closure->registers[instruction->a]->is_copy = FALSE;
+  closure->registers[instruction_a]->value_addr = (SRAM_ADDRESS) sub_closure;
+  closure->registers[instruction_a]->is_progmem = FALSE;
+  closure->registers[instruction_a]->is_copy = FALSE;
 }
 
 static void op_settabup(moon_instruction * instruction, moon_closure * closure) {
@@ -672,7 +672,7 @@ static void op_gettabup(moon_instruction * instruction, moon_closure * closure) 
     copy_reference(&bufc_ref, closure->registers[instruction->c]);
   }
 
-  find_hash_value(closure->registers[instruction->a], &(closure->up_values), &bufc_ref);
+  find_hash_value(closure->registers[instruction_a], &(closure->up_values), &bufc_ref);
 
   if (bufc_ref.is_copy == TRUE) delete_value((moon_value *) bufc_ref.value_addr);
 }
@@ -685,16 +685,16 @@ static void op_call(moon_instruction * instruction, moon_closure * closure) {
   moon_closure * sub_closure;
   moon_reference bufa_ref;
 
-  if (((moon_value *) closure->registers[instruction->a]->value_addr)->type != LUA_CLOSURE) {
+  if (((moon_value *) closure->registers[instruction_a]->value_addr)->type != LUA_CLOSURE) {
     moon_debug("error: trying to call a non closure type");
     return;
   }
 
-  sub_closure = (moon_closure *) closure->registers[instruction->a]->value_addr;
+  sub_closure = (moon_closure *) closure->registers[instruction_a]->value_addr;
 
   create_registers(sub_closure);
 
-  closure->base = instruction->a + 1;
+  closure->base = instruction_a + 1;
 
   if (instruction->b != 1) {
     if (instruction->b > 1) closure->top = closure->base + (instruction->b - 1);
@@ -706,8 +706,8 @@ static void op_call(moon_instruction * instruction, moon_closure * closure) {
 
   if (instruction->c != 1) {
     // @TODO : manage multiple results (c > 2)
-    copy_reference(closure->registers[instruction->a], &(sub_closure->result));
-    if (instruction->c == 0) closure->top = instruction->a + 1;
+    copy_reference(closure->registers[instruction_a], &(sub_closure->result));
+    if (instruction->c == 0) closure->top = instruction_a + 1;
   }
 
   delete_registers(sub_closure);
@@ -723,7 +723,7 @@ static void op_return(moon_instruction * instruction, moon_closure * closure) {
 
   if (instruction->b == 1) return;  // @TODO : manage quitting closure behaviour
 
-  copy_reference(&(closure->result), closure->registers[instruction->a]);
+  copy_reference(&(closure->result), closure->registers[instruction_a]);
 }
 
 static void run_instruction(moon_instruction * instruction, moon_closure * closure) {
