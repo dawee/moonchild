@@ -752,6 +752,17 @@ static void op_test(moon_instruction * instruction, moon_closure * closure) {
   }
 }
 
+static void op_testset(moon_instruction * instruction, moon_closure * closure) {
+  uint8_t instruction_a = MOON_READ_A(instruction);
+  uint16_t instruction_b = MOON_READ_B(instruction);
+  uint16_t instruction_c = MOON_READ_C(instruction);
+
+  if ( (instruction_c == 0 && MOON_IS_TRUE(closure->registers[instruction_b])) || (instruction_c == 1 && MOON_IS_FALSE(closure->registers[instruction_b]))) {
+    copy_reference(closure->registers[instruction_a], closure->registers[instruction_b]);
+    closure->pc++;
+  }
+}
+
 static void run_instruction(moon_instruction * instruction, moon_closure * closure) {
   uint8_t opcode = MOON_READ_OPCODE(instruction);
 
@@ -801,6 +812,9 @@ static void run_instruction(moon_instruction * instruction, moon_closure * closu
       break;
     case OPCODE_TEST:
       op_test(instruction, closure);
+      break;
+    case OPCODE_TESTSET:
+      op_testset(instruction, closure);
       break;
 
     case OPCODE_RETURN:
