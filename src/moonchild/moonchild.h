@@ -183,10 +183,21 @@ typedef struct {
   moon_reference result;
 } moon_closure;
 
-
 const moon_value MOON_NIL_VALUE PROGMEM = {.type = LUA_NIL, .nodes = 1};
 const moon_value MOON_TRUE_VALUE PROGMEM = {.type = LUA_TRUE, .nodes = 1};
 const moon_value MOON_FALSE_VALUE PROGMEM = {.type = LUA_FALSE, .nodes = 1};
+
+/*
+ * Types Macros
+ */
+
+#define MOON_IS_NIL(ref) (((moon_value *) (ref)->value_addr)->type == LUA_NIL)
+#define MOON_IS_TRUE(ref) (((moon_value *) (ref)->value_addr)->type == LUA_TRUE)
+#define MOON_IS_FALSE(ref) (((moon_value *) (ref)->value_addr)->type == LUA_FALSE)
+#define MOON_IS_INT(ref) (((moon_value *) (ref)->value_addr)->type == LUA_INT)
+#define MOON_IS_NUMBER(ref) (((moon_value *) (ref)->value_addr)->type == LUA_NUMBER)
+#define MOON_IS_STRING(ref) (((moon_value *) (ref)->value_addr)->type == LUA_STRING)
+#define MOON_IS_CLOSURE(ref) (((moon_value *) (ref)->value_addr)->type == LUA_CLOSURE)
 
 
 void moon_run_generated();
