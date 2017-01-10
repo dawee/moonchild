@@ -500,10 +500,19 @@ static void copy_to_params(moon_closure * closure, moon_closure * sub_closure) {
 }
 
 static void op_loadnil(moon_instruction * instruction, moon_closure * closure) {
+  uint8_t instruction_a = MOON_READ_A(instruction);
+  uint16_t instruction_b = MOON_READ_B(instruction);
+  uint16_t instruction_c = MOON_READ_C(instruction);
+
   set_to_nil(closure->registers[instruction->a]);
 }
 
 static void op_loadbool(moon_instruction * instruction, moon_closure * closure) {
+  uint8_t instruction_a = MOON_READ_A(instruction);
+  uint16_t instruction_b = MOON_READ_B(instruction);
+  uint16_t instruction_c = MOON_READ_C(instruction);
+
+
   if (instruction->b == 1) {
     set_to_true(closure->registers[instruction->a]);
   } else {
@@ -512,6 +521,9 @@ static void op_loadbool(moon_instruction * instruction, moon_closure * closure) 
 }
 
 static void op_loadk(moon_instruction * instruction, moon_closure * closure) {
+  uint8_t instruction_a = MOON_READ_A(instruction);
+  uint32_t instruction_bx = MOON_READ_BX(instruction);
+
   moon_prototype prototype;
   moon_reference const_ref;
 
@@ -521,6 +533,10 @@ static void op_loadk(moon_instruction * instruction, moon_closure * closure) {
 }
 
 static void op_add(moon_instruction * instruction, moon_closure * closure) {
+  uint8_t instruction_a = MOON_READ_A(instruction);
+  uint16_t instruction_b = MOON_READ_B(instruction);
+  uint16_t instruction_c = MOON_READ_C(instruction);
+
   moon_reference bufb_ref;
   moon_reference bufc_ref;
 
@@ -533,6 +549,10 @@ static void op_add(moon_instruction * instruction, moon_closure * closure) {
 }
 
 static void op_sub(moon_instruction * instruction, moon_closure * closure) {
+  uint8_t instruction_a = MOON_READ_A(instruction);
+  uint16_t instruction_b = MOON_READ_B(instruction);
+  uint16_t instruction_c = MOON_READ_C(instruction);
+
   moon_reference bufb_ref;
   moon_reference bufc_ref;
 
@@ -545,6 +565,10 @@ static void op_sub(moon_instruction * instruction, moon_closure * closure) {
 }
 
 static void op_mul(moon_instruction * instruction, moon_closure * closure) {
+  uint8_t instruction_a = MOON_READ_A(instruction);
+  uint16_t instruction_b = MOON_READ_B(instruction);
+  uint16_t instruction_c = MOON_READ_C(instruction);
+
   moon_reference bufb_ref;
   moon_reference bufc_ref;
 
@@ -557,6 +581,10 @@ static void op_mul(moon_instruction * instruction, moon_closure * closure) {
 }
 
 static void op_div(moon_instruction * instruction, moon_closure * closure) {
+  uint8_t instruction_a = MOON_READ_A(instruction);
+  uint16_t instruction_b = MOON_READ_B(instruction);
+  uint16_t instruction_c = MOON_READ_C(instruction);
+
   moon_reference bufb_ref;
   moon_reference bufc_ref;
 
@@ -569,6 +597,10 @@ static void op_div(moon_instruction * instruction, moon_closure * closure) {
 }
 
 static void op_move(moon_instruction * instruction, moon_closure * closure) {
+  uint8_t instruction_a = MOON_READ_A(instruction);
+  uint16_t instruction_b = MOON_READ_B(instruction);
+  uint16_t instruction_c = MOON_READ_C(instruction);
+
   copy_reference(closure->registers[instruction->a], closure->registers[instruction->b]);
 
   if (! closure->registers[instruction->a]->is_progmem) {
@@ -577,6 +609,10 @@ static void op_move(moon_instruction * instruction, moon_closure * closure) {
 }
 
 static void op_concat(moon_instruction * instruction, moon_closure * closure) {
+  uint8_t instruction_a = MOON_READ_A(instruction);
+  uint16_t instruction_b = MOON_READ_B(instruction);
+  uint16_t instruction_c = MOON_READ_C(instruction);
+
   moon_reference bufb_ref;
   moon_reference bufc_ref;
 
@@ -589,6 +625,9 @@ static void op_concat(moon_instruction * instruction, moon_closure * closure) {
 }
 
 static void op_closure(moon_instruction * instruction, moon_closure * closure) {
+  uint8_t instruction_a = MOON_READ_A(instruction);
+  uint32_t instruction_bx = MOON_READ_BX(instruction);
+
   moon_closure * sub_closure;
   moon_prototype prototype;
 
@@ -601,6 +640,10 @@ static void op_closure(moon_instruction * instruction, moon_closure * closure) {
 }
 
 static void op_settabup(moon_instruction * instruction, moon_closure * closure) {
+  uint8_t instruction_a = MOON_READ_A(instruction);
+  uint16_t instruction_b = MOON_READ_B(instruction);
+  uint16_t instruction_c = MOON_READ_C(instruction);
+
   moon_reference bufb_ref;
   moon_reference bufc_ref;
 
@@ -612,6 +655,10 @@ static void op_settabup(moon_instruction * instruction, moon_closure * closure) 
 }
 
 static void op_gettabup(moon_instruction * instruction, moon_closure * closure) {
+  uint8_t instruction_a = MOON_READ_A(instruction);
+  uint16_t instruction_b = MOON_READ_B(instruction);
+  uint16_t instruction_c = MOON_READ_C(instruction);
+
   moon_reference bufc_ref;
   moon_reference const_ref;
   moon_prototype prototype;
@@ -631,6 +678,10 @@ static void op_gettabup(moon_instruction * instruction, moon_closure * closure) 
 }
 
 static void op_call(moon_instruction * instruction, moon_closure * closure) {
+  uint8_t instruction_a = MOON_READ_A(instruction);
+  uint16_t instruction_b = MOON_READ_B(instruction);
+  uint16_t instruction_c = MOON_READ_C(instruction);
+
   moon_closure * sub_closure;
   moon_reference bufa_ref;
 
@@ -666,6 +717,10 @@ static void op_call(moon_instruction * instruction, moon_closure * closure) {
 }
 
 static void op_return(moon_instruction * instruction, moon_closure * closure) {
+  uint8_t instruction_a = MOON_READ_A(instruction);
+  uint16_t instruction_b = MOON_READ_B(instruction);
+  uint16_t instruction_c = MOON_READ_C(instruction);
+
   if (instruction->b == 1) return;  // @TODO : manage quitting closure behaviour
 
   copy_reference(&(closure->result), closure->registers[instruction->a]);
