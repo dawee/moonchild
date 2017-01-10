@@ -91,7 +91,8 @@ enum MOON_OPCODES {
 #define MOON_READ_B(ins) (uint16_t)(((ins->raw & 0xFF800000) >> 23) & 0xFF)
 #define MOON_READ_C(ins) (uint16_t)(((ins->raw & 0x7FC000) >> 14) & 0xFF)
 #define MOON_READ_BX(ins) (uint32_t)((ins->raw & 0xFFFFC000) >> 14)
-
+#define MOON_IS_OPBK(ins) (((ins->raw & 0xFF800000) >> 23) == 0x100)
+#define MOON_IS_OPCK(ins) (((ins->raw & 0x7FC000) >> 14) == 0x100)
 
 /*
  * Types

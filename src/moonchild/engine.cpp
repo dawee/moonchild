@@ -440,11 +440,11 @@ static void create_op_bufs(moon_reference * bufb_ref, moon_reference * bufc_ref,
 
   read_closure_prototype(&prototype, closure);
 
-  if ((instruction->flag & OPCK_FLAG) == OPCK_FLAG) {
+  if (MOON_IS_OPCK(instruction)) {
     create_value_copy(bufb_ref, closure->registers[instruction_b]);
     read_constant_reference(&const_ref, &prototype, instruction_c);
     create_value_copy(bufc_ref, &const_ref);
-  } else if ((instruction->flag & OPBK_FLAG) == OPBK_FLAG) {
+  } else if (MOON_IS_OPBK(instruction)) {
     read_constant_reference(&const_ref, &prototype, instruction_b);
     create_value_copy(bufb_ref, &const_ref);
     create_value_copy(bufc_ref, closure->registers[instruction_c]);
@@ -458,17 +458,19 @@ static void copy_op_bufs(moon_reference * bufb_ref, moon_reference * bufc_ref, m
   uint8_t instruction_a = MOON_READ_A(instruction);
   uint16_t instruction_b = MOON_READ_B(instruction);
   uint16_t instruction_c = MOON_READ_C(instruction);
+  BOOL is_opbk = MOON_IS_OPBK(instruction);
+  BOOL is_opck = MOON_IS_OPCK(instruction);
 
   moon_reference const_ref;
   moon_prototype prototype;
 
   read_closure_prototype(&prototype, closure);
 
-  if ((instruction->flag & OPCK_FLAG) == OPCK_FLAG) {
+  if (MOON_IS_OPCK(instruction)) {
     create_value_copy(bufb_ref, closure->registers[instruction_b]);
     read_constant_reference(&const_ref, &prototype, instruction_c);
     copy_reference(bufc_ref, &const_ref);
-  } else if ((instruction->flag & OPBK_FLAG) == OPBK_FLAG) {
+  } else if (MOON_IS_OPBK(instruction)) {
     read_constant_reference(&const_ref, &prototype, instruction_b);
     copy_reference(bufb_ref, &const_ref);
     copy_reference(bufc_ref, closure->registers[instruction_c]);
@@ -673,7 +675,7 @@ static void op_gettabup(moon_instruction * instruction, moon_closure * closure) 
 
   read_closure_prototype(&prototype, closure);
 
-  if ((instruction->flag & OPCK_FLAG) == OPCK_FLAG) {
+  if (MOON_IS_OPCK(instruction)) {
     read_constant_reference(&const_ref, &prototype, instruction_c);
     copy_reference(&bufc_ref, &const_ref);
   } else {
