@@ -736,6 +736,12 @@ static void op_return(moon_instruction * instruction, moon_closure * closure) {
   copy_reference(&(closure->result), closure->registers[instruction_a]);
 }
 
+static void op_jmp(moon_instruction * instruction, moon_closure * closure) {
+  int32_t sbx = MOON_READ_SBX(instruction);
+
+  closure->pc += sbx;
+}
+
 static void run_instruction(moon_instruction * instruction, moon_closure * closure) {
   uint8_t opcode = MOON_READ_OPCODE(instruction);
 
@@ -780,6 +786,10 @@ static void run_instruction(moon_instruction * instruction, moon_closure * closu
     case OPCODE_CALL:
       op_call(instruction, closure);
       break;
+    case OPCODE_JMP:
+      op_jmp(instruction, closure);
+      break;
+
     case OPCODE_RETURN:
       op_return(instruction, closure);
       break;
