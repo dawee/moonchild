@@ -136,8 +136,7 @@ typedef struct {
 } moon_string_value;
 
 typedef struct {
-  int32_t raw;
-  uint8_t flag;
+  uint32_t raw;
 } moon_instruction;
 
 typedef struct {
