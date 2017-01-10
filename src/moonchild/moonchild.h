@@ -86,11 +86,11 @@ enum MOON_OPCODES {
  * Intructions Macros
  */
 
-#define MOON_READ_INS_OPCODE(ins) (uint8_t)(ins & 0x3F)
-#define MOON_READ_INS_A(ins) (uint8_t)((ins & 0x3FC0) >> 6)
-#define MOON_READ_INS_B(ins) (uint16_t)((ins & 0xFF800000) >> 23)
-#define MOON_READ_INS_C(ins) (uint16_t)((ins & 0x7FC000) >> 14)
-#define MOON_READ_INS_BX(ins) (uint32_t)((ins & 0xFFFFC000) >> 14)
+#define MOON_READ_OPCODE(ins) (uint8_t)(ins->raw & 0x3F)
+#define MOON_READ_A(ins) (uint8_t)((ins->raw & 0x3FC0) >> 6)
+#define MOON_READ_B(ins) (uint16_t)((ins->raw & 0xFF800000) >> 23)
+#define MOON_READ_C(ins) (uint16_t)((ins->raw & 0x7FC000) >> 14)
+#define MOON_READ_BX(ins) (uint32_t)((ins->raw & 0xFFFFC000) >> 14)
 
 
 /*
