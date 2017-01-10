@@ -88,8 +88,8 @@ enum MOON_OPCODES {
 
 #define MOON_READ_OPCODE(ins) (uint8_t)(ins->raw & 0x3F)
 #define MOON_READ_A(ins) (uint8_t)((ins->raw & 0x3FC0) >> 6)
-#define MOON_READ_B(ins) (uint16_t)((ins->raw & 0xFF800000) >> 23)
-#define MOON_READ_C(ins) (uint16_t)((ins->raw & 0x7FC000) >> 14)
+#define MOON_READ_B(ins) (uint16_t)(((ins->raw & 0xFF800000) >> 23) & 0xFF)
+#define MOON_READ_C(ins) (uint16_t)(((ins->raw & 0x7FC000) >> 14) & 0xFF)
 #define MOON_READ_BX(ins) (uint32_t)((ins->raw & 0xFFFFC000) >> 14)
 
 

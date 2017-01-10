@@ -431,6 +431,10 @@ static void create_op_concat_result(moon_reference * result, moon_value * value_
 }
 
 static void create_op_bufs(moon_reference * bufb_ref, moon_reference * bufc_ref, moon_instruction * instruction, moon_closure * closure) {
+  uint8_t instruction_a = MOON_READ_A(instruction);
+  uint16_t instruction_b = MOON_READ_B(instruction);
+  uint16_t instruction_c = MOON_READ_C(instruction);
+
   moon_reference const_ref;
   moon_prototype prototype;
 
@@ -438,35 +442,39 @@ static void create_op_bufs(moon_reference * bufb_ref, moon_reference * bufc_ref,
 
   if ((instruction->flag & OPCK_FLAG) == OPCK_FLAG) {
     create_value_copy(bufb_ref, closure->registers[instruction->b]);
-    read_constant_reference(&const_ref, &prototype, instruction->c);
+    read_constant_reference(&const_ref, &prototype, instruction_c);
     create_value_copy(bufc_ref, &const_ref);
   } else if ((instruction->flag & OPBK_FLAG) == OPBK_FLAG) {
     read_constant_reference(&const_ref, &prototype, instruction->b);
     create_value_copy(bufb_ref, &const_ref);
-    create_value_copy(bufc_ref, closure->registers[instruction->c]);
+    create_value_copy(bufc_ref, closure->registers[instruction_c]);
   } else {
     create_value_copy(bufb_ref, closure->registers[instruction->b]);
-    create_value_copy(bufc_ref, closure->registers[instruction->c]);
+    create_value_copy(bufc_ref, closure->registers[instruction_c]);
   }
 }
 
 static void copy_op_bufs(moon_reference * bufb_ref, moon_reference * bufc_ref, moon_instruction * instruction, moon_closure * closure) {
+  uint8_t instruction_a = MOON_READ_A(instruction);
+  uint16_t instruction_b = MOON_READ_B(instruction);
+  uint16_t instruction_c = MOON_READ_C(instruction);
+
   moon_reference const_ref;
   moon_prototype prototype;
 
   read_closure_prototype(&prototype, closure);
 
   if ((instruction->flag & OPCK_FLAG) == OPCK_FLAG) {
-    create_value_copy(bufb_ref, closure->registers[instruction->b]);
-    read_constant_reference(&const_ref, &prototype, instruction->c);
+    create_value_copy(bufb_ref, closure->registers[instruction_b]);
+    read_constant_reference(&const_ref, &prototype, instruction_c);
     copy_reference(bufc_ref, &const_ref);
   } else if ((instruction->flag & OPBK_FLAG) == OPBK_FLAG) {
-    read_constant_reference(&const_ref, &prototype, instruction->b);
+    read_constant_reference(&const_ref, &prototype, instruction_b);
     copy_reference(bufb_ref, &const_ref);
-    copy_reference(bufc_ref, closure->registers[instruction->c]);
+    copy_reference(bufc_ref, closure->registers[instruction_c]);
   } else {
-    copy_reference(bufb_ref, closure->registers[instruction->b]);
-    copy_reference(bufc_ref, closure->registers[instruction->c]);
+    copy_reference(bufb_ref, closure->registers[instruction_b]);
+    copy_reference(bufc_ref, closure->registers[instruction_c]);
   }
 }
 
@@ -666,10 +674,10 @@ static void op_gettabup(moon_instruction * instruction, moon_closure * closure) 
   read_closure_prototype(&prototype, closure);
 
   if ((instruction->flag & OPCK_FLAG) == OPCK_FLAG) {
-    read_constant_reference(&const_ref, &prototype, instruction->c);
+    read_constant_reference(&const_ref, &prototype, instruction_c);
     copy_reference(&bufc_ref, &const_ref);
   } else {
-    copy_reference(&bufc_ref, closure->registers[instruction->c]);
+    copy_reference(&bufc_ref, closure->registers[instruction_c]);
   }
 
   find_hash_value(closure->registers[instruction_a], &(closure->up_values), &bufc_ref);
@@ -704,10 +712,10 @@ static void op_call(moon_instruction * instruction, moon_closure * closure) {
 
   run_closure(sub_closure);
 
-  if (instruction->c != 1) {
+  if (instruction_c != 1) {
     // @TODO : manage multiple results (c > 2)
     copy_reference(closure->registers[instruction_a], &(sub_closure->result));
-    if (instruction->c == 0) closure->top = instruction_a + 1;
+    if (instruction_c == 0) closure->top = instruction_a + 1;
   }
 
   delete_registers(sub_closure);
