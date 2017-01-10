@@ -536,7 +536,7 @@ static void op_loadk(moon_instruction * instruction, moon_closure * closure) {
   moon_reference const_ref;
 
   read_closure_prototype(&prototype, closure);
-  read_constant_reference(&const_ref, &prototype, instruction->b);
+  read_constant_reference(&const_ref, &prototype, instruction_bx);
   copy_reference(closure->registers[instruction_a], &const_ref);
 }
 
@@ -640,7 +640,7 @@ static void op_closure(moon_instruction * instruction, moon_closure * closure) {
   moon_prototype prototype;
 
   read_closure_prototype(&prototype, closure);
-  sub_closure = create_closure(prototype.prototypes_addr, instruction->b);
+  sub_closure = create_closure(prototype.prototypes_addr, instruction_bx);
 
   closure->registers[instruction_a]->value_addr = (SRAM_ADDRESS) sub_closure;
   closure->registers[instruction_a]->is_progmem = FALSE;
