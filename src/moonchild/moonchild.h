@@ -136,10 +136,6 @@ typedef struct {
 
 typedef struct {
   int32_t raw;
-  uint8_t opcode;
-  uint8_t a;
-  int32_t b;
-  uint8_t c;
   uint8_t flag;
 } moon_instruction;
 

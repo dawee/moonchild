@@ -441,15 +441,15 @@ static void create_op_bufs(moon_reference * bufb_ref, moon_reference * bufc_ref,
   read_closure_prototype(&prototype, closure);
 
   if ((instruction->flag & OPCK_FLAG) == OPCK_FLAG) {
-    create_value_copy(bufb_ref, closure->registers[instruction->b]);
+    create_value_copy(bufb_ref, closure->registers[instruction_b]);
     read_constant_reference(&const_ref, &prototype, instruction_c);
     create_value_copy(bufc_ref, &const_ref);
   } else if ((instruction->flag & OPBK_FLAG) == OPBK_FLAG) {
-    read_constant_reference(&const_ref, &prototype, instruction->b);
+    read_constant_reference(&const_ref, &prototype, instruction_b);
     create_value_copy(bufb_ref, &const_ref);
     create_value_copy(bufc_ref, closure->registers[instruction_c]);
   } else {
-    create_value_copy(bufb_ref, closure->registers[instruction->b]);
+    create_value_copy(bufb_ref, closure->registers[instruction_b]);
     create_value_copy(bufc_ref, closure->registers[instruction_c]);
   }
 }
@@ -521,7 +521,7 @@ static void op_loadbool(moon_instruction * instruction, moon_closure * closure) 
   uint16_t instruction_c = MOON_READ_C(instruction);
 
 
-  if (instruction->b == 1) {
+  if (instruction_b == 1) {
     set_to_true(closure->registers[instruction_a]);
   } else {
     set_to_false(closure->registers[instruction_a]);
@@ -609,7 +609,7 @@ static void op_move(moon_instruction * instruction, moon_closure * closure) {
   uint16_t instruction_b = MOON_READ_B(instruction);
   uint16_t instruction_c = MOON_READ_C(instruction);
 
-  copy_reference(closure->registers[instruction_a], closure->registers[instruction->b]);
+  copy_reference(closure->registers[instruction_a], closure->registers[instruction_b]);
 
   if (! closure->registers[instruction_a]->is_progmem) {
     ((moon_value *) closure->registers[instruction_a])->nodes++;
@@ -704,8 +704,8 @@ static void op_call(moon_instruction * instruction, moon_closure * closure) {
 
   closure->base = instruction_a + 1;
 
-  if (instruction->b != 1) {
-    if (instruction->b > 1) closure->top = closure->base + (instruction->b - 1);
+  if (instruction_b != 1) {
+    if (instruction_b > 1) closure->top = closure->base + (instruction_b - 1);
 
     copy_to_params(closure, sub_closure);
   }
@@ -729,7 +729,7 @@ static void op_return(moon_instruction * instruction, moon_closure * closure) {
   uint16_t instruction_b = MOON_READ_B(instruction);
   uint16_t instruction_c = MOON_READ_C(instruction);
 
-  if (instruction->b == 1) return;  // @TODO : manage quitting closure behaviour
+  if (instruction_b == 1) return;  // @TODO : manage quitting closure behaviour
 
   copy_reference(&(closure->result), closure->registers[instruction_a]);
 }
@@ -783,7 +783,7 @@ static void run_instruction(moon_instruction * instruction, moon_closure * closu
       break;
 
     default:
-      moon_debug("unknown upcode : %d\n", instruction->opcode);
+      moon_debug("unknown upcode : %d\n", opcode);
       break;
   };
 
