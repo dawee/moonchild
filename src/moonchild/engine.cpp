@@ -130,26 +130,26 @@ static void ref_to_str(char * result, moon_reference * reference) {
 
   switch(((moon_value *) buf_ref.value_addr)->type) {
     case LUA_NIL:
-      sprintf(result, "nil\n");
+      sprintf(result, "\nnil\n");
       break;
     case LUA_FALSE:
-      sprintf(result, "false\n");
+      sprintf(result, "\nfalse\n");
       break;
     case LUA_TRUE:
-      sprintf(result, "true\n");
+      sprintf(result, "\ntrue\n");
       break;
     case LUA_INT:
-      sprintf(result, "%d\n", ((moon_int_value *) buf_ref.value_addr)->val);
+      sprintf(result, "\n%d\n", ((moon_int_value *) buf_ref.value_addr)->val);
       break;
     case LUA_NUMBER:
-      sprintf(result, "~%d\n", (int)((moon_number_value *) buf_ref.value_addr)->val);
+      sprintf(result, "\n~%d\n", (int)((moon_number_value *) buf_ref.value_addr)->val);
       break;
     case LUA_STRING:
-      sprintf(result, "%s\n", (char *)(((moon_string_value *) buf_ref.value_addr)->string_addr));
+      sprintf(result, "\n%s\n", (char *)(((moon_string_value *) buf_ref.value_addr)->string_addr));
       break;
 
     default:
-      sprintf(result, "other type : %d\n", ((moon_value *) buf_ref.value_addr)->type);
+      sprintf(result, "\nother type : %d\n", ((moon_value *) buf_ref.value_addr)->type);
       break;
   };
 
