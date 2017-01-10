@@ -119,6 +119,7 @@ typedef struct {
 } moon_string_value;
 
 typedef struct {
+  int32_t raw;
   uint8_t opcode;
   uint8_t a;
   uint32_t b;
