@@ -615,7 +615,13 @@ static void op_div(moon_instruction * instruction, moon_closure * closure) {
 }
 
 static void op_idiv(moon_instruction * instruction, moon_closure * closure) {
+  uint8_t instruction_a = MOON_READ_A(instruction);
+
   op_div(instruction, closure);
+
+  if (MOON_IS_NUMBER(closure->registers[instruction_a])) {
+    create_int_value(closure->registers[instruction_a], (CTYPE_LUA_INT) MOON_AS_NUMBER(closure->registers[instruction_a])->val);
+  }
 }
 
 static void op_move(moon_instruction * instruction, moon_closure * closure) {
