@@ -614,6 +614,10 @@ static void op_div(moon_instruction * instruction, moon_closure * closure) {
   if (bufc_ref.is_copy == TRUE) delete_value((moon_value *) bufc_ref.value_addr);
 }
 
+static void op_idiv(moon_instruction * instruction, moon_closure * closure) {
+  op_div(instruction, closure);
+}
+
 static void op_move(moon_instruction * instruction, moon_closure * closure) {
   uint8_t instruction_a = MOON_READ_A(instruction);
   uint16_t instruction_b = MOON_READ_B(instruction);
@@ -795,6 +799,9 @@ static void run_instruction(moon_instruction * instruction, moon_closure * closu
       break;
     case OPCODE_DIV:
       op_div(instruction, closure);
+      break;
+    case OPCODE_IDIV:
+      op_idiv(instruction, closure);
       break;
     case OPCODE_MOVE:
       op_move(instruction, closure);
