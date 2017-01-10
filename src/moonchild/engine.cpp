@@ -755,24 +755,36 @@ static void op_jmp(moon_instruction * instruction, moon_closure * closure) {
 }
 
 static void op_test(moon_instruction * instruction, moon_closure * closure) {
+  moon_reference bufa_ref;
+
   uint8_t instruction_a = MOON_READ_A(instruction);
   uint16_t instruction_b = MOON_READ_B(instruction);
   uint16_t instruction_c = MOON_READ_C(instruction);
 
-  if ( (instruction_c == 0 && MOON_IS_TRUE(closure->registers[instruction_a])) || (instruction_c == 1 && MOON_IS_FALSE(closure->registers[instruction_a]))) {
+  create_value_copy(&bufa_ref, closure->registers[instruction_a]);
+
+  if ((instruction_c == 0 && MOON_IS_TRUE(&bufa_ref)) || (instruction_c == 1 && MOON_IS_FALSE(&bufa_ref))) {
     closure->pc++;
   }
+
+  if (bufa_ref.is_copy == TRUE) delete_value((moon_value *) bufa_ref.value_addr);
 }
 
 static void op_testset(moon_instruction * instruction, moon_closure * closure) {
+  moon_reference bufb_ref;
+
   uint8_t instruction_a = MOON_READ_A(instruction);
   uint16_t instruction_b = MOON_READ_B(instruction);
   uint16_t instruction_c = MOON_READ_C(instruction);
 
-  if ( (instruction_c == 0 && MOON_IS_TRUE(closure->registers[instruction_b])) || (instruction_c == 1 && MOON_IS_FALSE(closure->registers[instruction_b]))) {
+  create_value_copy(&bufb_ref, closure->registers[instruction_b]);
+
+  if ((instruction_c == 0 && MOON_IS_TRUE(&bufb_ref)) || (instruction_c == 1 && MOON_IS_FALSE(&bufb_ref))) {
     copy_reference(closure->registers[instruction_a], closure->registers[instruction_b]);
     closure->pc++;
   }
+
+  if (bufb_ref.is_copy == TRUE) delete_value((moon_value *) bufb_ref.value_addr);
 }
 
 static void run_instruction(moon_instruction * instruction, moon_closure * closure) {
