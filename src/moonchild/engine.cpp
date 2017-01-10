@@ -27,6 +27,20 @@ static void set_to_false(moon_reference * reference) {
   reference->value_addr = (SRAM_ADDRESS) &MOON_FALSE_VALUE;
 }
 
+static void create_int_value(moon_reference * reference, CTYPE_LUA_INT int_val) {
+  reference->value_addr = (SRAM_ADDRESS) malloc(sizeof(moon_int_value));
+  ((moon_int_value *) reference->value_addr)->type = LUA_INT;
+  ((moon_int_value *) reference->value_addr)->val = int_val;
+  ((moon_int_value *) reference->value_addr)->nodes = 1;
+}
+
+static void create_number_value(moon_reference * reference, CTYPE_LUA_NUMBER number_val) {
+  reference->value_addr = (SRAM_ADDRESS) malloc(sizeof(moon_number_value));
+  ((moon_number_value *) reference->value_addr)->type = LUA_NUMBER;
+  ((moon_number_value *) reference->value_addr)->val = number_val;
+  ((moon_number_value *) reference->value_addr)->nodes = 1;
+}
+
 static void init_registers(moon_closure * closure);
 static void init_hash(moon_hash * hash);
 
@@ -319,15 +333,9 @@ static BOOL check_literal_values(moon_value * value_a, moon_value * value_b) {
 
 static void create_result_value(moon_reference * result, moon_value * value_a, moon_value * value_b, CTYPE_LUA_INT int_val, CTYPE_LUA_NUMBER number_val) {
   if (value_a->type == LUA_NUMBER || value_b->type == LUA_NUMBER) {
-    result->value_addr = (SRAM_ADDRESS) malloc(sizeof(moon_number_value));
-    ((moon_number_value *) result->value_addr)->type = LUA_NUMBER;
-    ((moon_number_value *) result->value_addr)->val = number_val;
-    ((moon_number_value *) result->value_addr)->nodes = 1;
+    create_number_value(result, number_val);
   } else {
-    result->value_addr = (SRAM_ADDRESS) malloc(sizeof(moon_int_value));
-    ((moon_int_value *) result->value_addr)->type = LUA_INT;
-    ((moon_int_value *) result->value_addr)->val = int_val;
-    ((moon_int_value *) result->value_addr)->nodes = 1;
+    create_int_value(result, int_val);
   }
 }
 
