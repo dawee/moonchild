@@ -81,6 +81,22 @@ enum MOON_OPCODES {
   OPCODE_EXTRAARG
 };
 
+
+/*
+ * Intructions Macros
+ */
+
+#define MOON_READ_INS_OPCODE(ins) (uint8_t)(ins & 0x3F)
+#define MOON_READ_INS_A(ins) (uint8_t)((ins & 0x3FC0) >> 6)
+#define MOON_READ_INS_B(ins) (uint16_t)((ins & 0xFF800000) >> 23)
+#define MOON_READ_INS_C(ins) (uint16_t)((ins & 0x7FC000) >> 14)
+#define MOON_READ_INS_BX(ins) (uint32_t)((ins & 0xFFFFC000) >> 14)
+
+
+/*
+ * Types
+ */
+
 enum MOON_TYPES {
   LUA_NIL,
   LUA_TRUE,
@@ -122,7 +138,7 @@ typedef struct {
   int32_t raw;
   uint8_t opcode;
   uint8_t a;
-  uint32_t b;
+  int32_t b;
   uint8_t c;
   uint8_t flag;
 } moon_instruction;

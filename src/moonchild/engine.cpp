@@ -672,7 +672,10 @@ static void op_return(moon_instruction * instruction, moon_closure * closure) {
 }
 
 static void run_instruction(moon_instruction * instruction, moon_closure * closure) {
-  switch(instruction->opcode) {
+  uint8_t opcode = MOON_READ_INS_OPCODE(instruction->raw);
+
+
+  switch(opcode) {
     case OPCODE_LOADNIL:
       op_loadnil(instruction, closure);
       break;
