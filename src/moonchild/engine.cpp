@@ -731,7 +731,7 @@ static void op_return(moon_instruction * instruction, moon_closure * closure) {
   uint16_t instruction_b = MOON_READ_B(instruction);
   uint16_t instruction_c = MOON_READ_C(instruction);
 
-  if (instruction_b == 1) return;  // @TODO : manage quitting closure behaviour
+  if (instruction_b == 1) return;  // @TODO : manage multipe results
 
   copy_reference(&(closure->result), closure->registers[instruction_a]);
 }
