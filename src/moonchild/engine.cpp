@@ -703,6 +703,24 @@ static void op_concat(moon_instruction * instruction, moon_closure * closure) {
   if (bufc_ref.is_copy == TRUE) delete_value((moon_value *) bufc_ref.value_addr);
 }
 
+static void op_eq(moon_instruction * instruction, moon_closure * closure) {
+  uint8_t instruction_a = MOON_READ_A(instruction);
+  uint16_t instruction_b = MOON_READ_B(instruction);
+  uint16_t instruction_c = MOON_READ_C(instruction);
+
+  moon_reference bufb_ref;
+  moon_reference bufc_ref;
+
+  create_op_bufs(&bufb_ref, &bufc_ref, instruction, closure);
+
+  if (instruction_a == 0 && (equals(&bufb_ref, &bufc_ref) == TRUE)) {
+    closure->pc++;
+  }
+
+  if (bufb_ref.is_copy == TRUE) delete_value((moon_value *) bufb_ref.value_addr);
+  if (bufc_ref.is_copy == TRUE) delete_value((moon_value *) bufc_ref.value_addr);
+}
+
 static void op_closure(moon_instruction * instruction, moon_closure * closure) {
   uint8_t instruction_a = MOON_READ_A(instruction);
   uint32_t instruction_bx = MOON_READ_BX(instruction);
@@ -899,6 +917,9 @@ static void run_instruction(moon_instruction * instruction, moon_closure * closu
       break;
     case OPCODE_TESTSET:
       op_testset(instruction, closure);
+      break;
+    case OPCODE_EQ:
+      op_eq(instruction, closure);
       break;
 
     case OPCODE_RETURN:
