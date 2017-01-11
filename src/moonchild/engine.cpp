@@ -258,6 +258,14 @@ static BOOL is_lower(moon_reference * ref_a, moon_reference * ref_b) {
   return result;
 }
 
+static BOOL pass_test(moon_reference * ref) {
+  return (
+    (MOON_IS_NIL(ref) || MOON_IS_FALSE(ref))
+    || (MOON_IS_INT(ref) && (MOON_AS_INT(ref)->val == 0))
+    || (MOON_IS_NUMBER(ref) && (MOON_AS_NUMBER(ref)->val == 0))
+  ) ? FALSE : TRUE;
+}
+
 static void init_hash(moon_hash * hash) {
   hash->count = 0;
 }
@@ -517,9 +525,24 @@ static void create_op_concat_result(moon_reference * result, moon_value * value_
   );
 }
 
-static void create_op_bufs(moon_reference * bufb_ref, moon_reference * bufc_ref, moon_instruction * instruction, moon_closure * closure) {
-  uint8_t instruction_a = MOON_READ_A(instruction);
+
+static void create_opb_buf(moon_reference * bufb_ref, moon_instruction * instruction, moon_closure * closure) {
   uint16_t instruction_b = MOON_READ_B(instruction);
+
+  moon_reference const_ref;
+  moon_prototype prototype;
+
+  read_closure_prototype(&prototype, closure);
+
+ if (MOON_IS_OPBK(instruction)) {
+    read_constant_reference(&const_ref, &prototype, instruction_b);
+    create_value_copy(bufb_ref, &const_ref);
+  } else {
+    create_value_copy(bufb_ref, closure->registers[instruction_b]);
+  }
+}
+
+static void create_opc_buf(moon_reference * bufc_ref, moon_instruction * instruction, moon_closure * closure) {
   uint16_t instruction_c = MOON_READ_C(instruction);
 
   moon_reference const_ref;
@@ -527,18 +550,17 @@ static void create_op_bufs(moon_reference * bufb_ref, moon_reference * bufc_ref,
 
   read_closure_prototype(&prototype, closure);
 
-  if (MOON_IS_OPCK(instruction)) {
-    create_value_copy(bufb_ref, closure->registers[instruction_b]);
+ if (MOON_IS_OPCK(instruction)) {
     read_constant_reference(&const_ref, &prototype, instruction_c);
     create_value_copy(bufc_ref, &const_ref);
-  } else if (MOON_IS_OPBK(instruction)) {
-    read_constant_reference(&const_ref, &prototype, instruction_b);
-    create_value_copy(bufb_ref, &const_ref);
-    create_value_copy(bufc_ref, closure->registers[instruction_c]);
   } else {
-    create_value_copy(bufb_ref, closure->registers[instruction_b]);
     create_value_copy(bufc_ref, closure->registers[instruction_c]);
   }
+}
+
+static void create_op_bufs(moon_reference * bufb_ref, moon_reference * bufc_ref, moon_instruction * instruction, moon_closure * closure) {
+  create_opb_buf(bufb_ref, instruction, closure);
+  create_opc_buf(bufc_ref, instruction, closure);
 }
 
 static void copy_op_bufs(moon_reference * bufb_ref, moon_reference * bufc_ref, moon_instruction * instruction, moon_closure * closure) {
@@ -767,6 +789,23 @@ static void op_lt(moon_instruction * instruction, moon_closure * closure) {
   if (bufc_ref.is_copy == TRUE) delete_value((moon_value *) bufc_ref.value_addr);
 }
 
+static void op_not(moon_instruction * instruction, moon_closure * closure) {
+  uint8_t instruction_a = MOON_READ_A(instruction);
+  uint16_t instruction_b = MOON_READ_B(instruction);
+
+  moon_reference bufb_ref;
+
+  create_opb_buf(&bufb_ref, instruction, closure);
+
+  if (pass_test(&bufb_ref) == TRUE) {
+    set_to_false(closure->registers[instruction_a]);
+  } else {
+    set_to_true(closure->registers[instruction_a]);
+  }
+
+  if (bufb_ref.is_copy == TRUE) delete_value((moon_value *) bufb_ref.value_addr);
+}
+
 static void op_closure(moon_instruction * instruction, moon_closure * closure) {
   uint8_t instruction_a = MOON_READ_A(instruction);
   uint32_t instruction_bx = MOON_READ_BX(instruction);
@@ -884,7 +923,7 @@ static void op_test(moon_instruction * instruction, moon_closure * closure) {
 
   create_value_copy(&bufa_ref, closure->registers[instruction_a]);
 
-  if ((instruction_c == 0 && MOON_IS_TRUE(&bufa_ref)) || (instruction_c == 1 && MOON_IS_FALSE(&bufa_ref))) {
+  if ((instruction_c == 0 && (pass_test(&bufa_ref) == TRUE)) || (instruction_c == 1 && (pass_test(&bufa_ref) == FALSE))) {
     closure->pc++;
   }
 
@@ -900,7 +939,7 @@ static void op_testset(moon_instruction * instruction, moon_closure * closure) {
 
   create_value_copy(&bufb_ref, closure->registers[instruction_b]);
 
-  if ((instruction_c == 0 && MOON_IS_TRUE(&bufb_ref)) || (instruction_c == 1 && MOON_IS_FALSE(&bufb_ref))) {
+  if ((instruction_c == 0 && (pass_test(&bufb_ref) == TRUE)) || (instruction_c == 1 && (pass_test(&bufb_ref) == FALSE))) {
     copy_reference(closure->registers[instruction_a], closure->registers[instruction_b]);
     closure->pc++;
   }
@@ -966,6 +1005,9 @@ static void run_instruction(moon_instruction * instruction, moon_closure * closu
       break;
     case OPCODE_EQ:
       op_eq(instruction, closure);
+      break;
+    case OPCODE_NOT:
+      op_not(instruction, closure);
       break;
     case OPCODE_LT:
       op_lt(instruction, closure);
