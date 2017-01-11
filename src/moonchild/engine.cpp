@@ -230,6 +230,34 @@ static BOOL equals(moon_reference * ref_a, moon_reference * ref_b) {
   return result;
 }
 
+static BOOL is_lower(moon_reference * ref_a, moon_reference * ref_b) {
+  BOOL result = FALSE;
+
+  if (!MOON_IS_ARITHMETIC(ref_a) || !MOON_IS_ARITHMETIC(ref_b)) return result;
+
+  switch(MOON_AS_VALUE(ref_a)->type) {
+    case LUA_INT:
+      result = (
+        (MOON_IS_INT(ref_b) && (MOON_AS_INT(ref_a)->val < MOON_AS_INT(ref_b)->val))
+        || (MOON_IS_NUMBER(ref_b) && (MOON_AS_INT(ref_a)->val < MOON_AS_NUMBER(ref_b)->val))
+      ) ? TRUE : FALSE;
+      break;
+
+    case LUA_NUMBER:
+      result = (
+        (MOON_IS_NUMBER(ref_b) && (MOON_AS_NUMBER(ref_a)->val < MOON_AS_NUMBER(ref_b)->val))
+        || (MOON_IS_INT(ref_b) && (MOON_AS_NUMBER(ref_a)->val < MOON_AS_INT(ref_b)->val))
+      ) ? TRUE : FALSE;
+      break;
+
+    default:
+      moon_debug("error: could not compute equals() of type '%d'", MOON_AS_VALUE(ref_a)->type);
+      break;
+  };
+
+  return result;
+}
+
 static void init_hash(moon_hash * hash) {
   hash->count = 0;
 }
@@ -721,6 +749,24 @@ static void op_eq(moon_instruction * instruction, moon_closure * closure) {
   if (bufc_ref.is_copy == TRUE) delete_value((moon_value *) bufc_ref.value_addr);
 }
 
+static void op_lt(moon_instruction * instruction, moon_closure * closure) {
+  uint8_t instruction_a = MOON_READ_A(instruction);
+  uint16_t instruction_b = MOON_READ_B(instruction);
+  uint16_t instruction_c = MOON_READ_C(instruction);
+
+  moon_reference bufb_ref;
+  moon_reference bufc_ref;
+
+  create_op_bufs(&bufb_ref, &bufc_ref, instruction, closure);
+
+  if (instruction_a == 0 && (is_lower(&bufb_ref, &bufc_ref) == TRUE)) {
+    closure->pc++;
+  }
+
+  if (bufb_ref.is_copy == TRUE) delete_value((moon_value *) bufb_ref.value_addr);
+  if (bufc_ref.is_copy == TRUE) delete_value((moon_value *) bufc_ref.value_addr);
+}
+
 static void op_closure(moon_instruction * instruction, moon_closure * closure) {
   uint8_t instruction_a = MOON_READ_A(instruction);
   uint32_t instruction_bx = MOON_READ_BX(instruction);
@@ -920,6 +966,9 @@ static void run_instruction(moon_instruction * instruction, moon_closure * closu
       break;
     case OPCODE_EQ:
       op_eq(instruction, closure);
+      break;
+    case OPCODE_LT:
+      op_lt(instruction, closure);
       break;
 
     case OPCODE_RETURN:
