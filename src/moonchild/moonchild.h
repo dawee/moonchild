@@ -170,12 +170,13 @@ typedef struct {
   PGMEM_ADDRESS prototypes_addr;
 } moon_prototype;
 
-typedef struct {
+typedef struct moon_closure_t {
   uint8_t type;
   uint16_t nodes;
   uint16_t top;
   uint16_t base;
   uint16_t pc;
+  moon_closure_t * parent;
   moon_hash up_values;
   PGMEM_ADDRESS prototype_addr;
   uint16_t prototype_addr_cursor;

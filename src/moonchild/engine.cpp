@@ -44,11 +44,12 @@ static void create_number_value(moon_reference * reference, CTYPE_LUA_NUMBER num
 static void init_registers(moon_closure * closure);
 static void init_hash(moon_hash * hash);
 
-static moon_closure * create_closure(PGMEM_ADDRESS prototype_addr, uint16_t prototype_addr_cursor = 0) {
+static moon_closure * create_closure(PGMEM_ADDRESS prototype_addr, uint16_t prototype_addr_cursor = 0, moon_closure * parent = NULL) {
   moon_closure * closure = (moon_closure *) malloc(sizeof(moon_closure));
 
   closure->type = LUA_CLOSURE;
   closure->nodes = 0;
+  closure->parent = parent;
   closure->prototype_addr = prototype_addr;
   closure->prototype_addr_cursor = prototype_addr_cursor;
 
@@ -833,7 +834,7 @@ static void op_closure(moon_instruction * instruction, moon_closure * closure) {
   moon_prototype prototype;
 
   read_closure_prototype(&prototype, closure);
-  sub_closure = create_closure(prototype.prototypes_addr, instruction_bx);
+  sub_closure = create_closure(prototype.prototypes_addr, instruction_bx, closure);
 
   closure->registers[instruction_a]->value_addr = (SRAM_ADDRESS) sub_closure;
   closure->registers[instruction_a]->is_progmem = FALSE;
