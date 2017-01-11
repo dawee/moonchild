@@ -179,6 +179,57 @@ static void read_closure_prototype(moon_prototype * prototype, moon_closure * cl
   progmem_cpy(prototype, closure->prototype_addr, sizeof(moon_prototype), sizeof(moon_prototype) * closure->prototype_addr_cursor);
 }
 
+static BOOL equals_string(moon_reference * ref_a, moon_reference * ref_b) {
+  BOOL result = TRUE;
+
+  if (MOON_AS_STRING(ref_a)->length != MOON_AS_STRING(ref_b)->length) return false;
+
+  for (uint16_t index = 0; index < MOON_AS_STRING(ref_a)->length; ++index) {
+    if (MOON_AS_CSTRING(ref_a)[index] != MOON_AS_CSTRING(ref_b)[index]) {
+      result = FALSE;
+      break;
+    }
+  }
+
+  return result;
+}
+
+static BOOL equals(moon_reference * ref_a, moon_reference * ref_b) {
+  BOOL result = FALSE;
+
+  switch(MOON_AS_VALUE(ref_a)->type) {
+    case LUA_NIL:
+    case LUA_FALSE:
+    case LUA_TRUE:
+      result = (MOON_AS_VALUE(ref_a)->type == MOON_AS_VALUE(ref_b)->type) ? TRUE : FALSE;
+      break;
+
+    case LUA_INT:
+      result = (
+        (MOON_IS_INT(ref_b) && (MOON_AS_INT(ref_a)->val == MOON_AS_INT(ref_b)->val))
+        || (MOON_IS_NUMBER(ref_b) && (MOON_AS_INT(ref_a)->val == MOON_AS_NUMBER(ref_b)->val))
+      ) ? TRUE : FALSE;
+      break;
+
+    case LUA_NUMBER:
+      result = (
+        (MOON_IS_NUMBER(ref_b) && (MOON_AS_NUMBER(ref_a)->val == MOON_AS_NUMBER(ref_b)->val))
+        || (MOON_IS_INT(ref_b) && (MOON_AS_NUMBER(ref_a)->val == MOON_AS_INT(ref_b)->val))
+      ) ? TRUE : FALSE;
+      break;
+
+    case LUA_STRING:
+      result = (MOON_IS_STRING(ref_b) && equals_string(ref_a, ref_b)) ? TRUE : FALSE;
+      break;
+
+    default:
+      moon_debug("error: could not compute equals() of type '%d'", MOON_AS_VALUE(ref_a)->type);
+      break;
+  };
+
+  return result;
+}
+
 static void init_hash(moon_hash * hash) {
   hash->count = 0;
 }

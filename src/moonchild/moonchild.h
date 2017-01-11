@@ -199,12 +199,13 @@ const moon_value MOON_FALSE_VALUE PROGMEM = {.type = LUA_FALSE, .nodes = 1};
 #define MOON_IS_STRING(ref) (((moon_value *) (ref)->value_addr)->type == LUA_STRING)
 #define MOON_IS_CLOSURE(ref) (((moon_value *) (ref)->value_addr)->type == LUA_CLOSURE)
 
+#define MOON_IS_ARITHMETIC(ref) (MOON_IS_INT(ref) || MOON_IS_NUMBER(ref))
 
 #define MOON_AS_VALUE(ref) ((moon_value *)(ref->value_addr))
 #define MOON_AS_NUMBER(ref) ((moon_number_value *)(ref->value_addr))
 #define MOON_AS_INT(ref) ((moon_int_value *)(ref->value_addr))
 #define MOON_AS_STRING(ref) ((moon_string_value *)(ref->value_addr))
-
+#define MOON_AS_CSTRING(ref) ((char *)(MOON_AS_STRING(ref)->string_addr))
 
 void moon_run_generated();
 void moon_arch_run(PGMEM_ADDRESS prototype_addr);
