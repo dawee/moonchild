@@ -763,7 +763,7 @@ static void op_eq(moon_instruction * instruction, moon_closure * closure) {
 
   create_op_bufs(&bufb_ref, &bufc_ref, instruction, closure);
 
-  if (instruction_a == 0 && (equals(&bufb_ref, &bufc_ref) == TRUE)) {
+  if ((instruction_a == 0 && (equals(&bufb_ref, &bufc_ref) == TRUE)) || (instruction_a == 1 && (equals(&bufb_ref, &bufc_ref) == FALSE))) {
     closure->pc++;
   }
 
@@ -781,7 +781,7 @@ static void op_lt(moon_instruction * instruction, moon_closure * closure) {
 
   create_op_bufs(&bufb_ref, &bufc_ref, instruction, closure);
 
-  if (instruction_a == 0 && (is_lower(&bufb_ref, &bufc_ref) == TRUE)) {
+  if ((instruction_a == 0 && (is_lower(&bufb_ref, &bufc_ref) == TRUE)) || (instruction_a == 1 && (is_lower(&bufb_ref, &bufc_ref) == FALSE))) {
     closure->pc++;
   }
 
