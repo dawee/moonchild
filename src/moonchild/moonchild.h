@@ -4,7 +4,8 @@
 #include <stdint.h>
 #include <stdio.h>
 
-#define MOON_MAX_REGISTERS 10
+#define MOON_MAX_REGISTERS 20
+#define MOON_MAX_UPVALUES 20
 
 #define OPBK_FLAG 0b00000001
 #define OPCK_FLAG 0b00000010
@@ -183,11 +184,11 @@ typedef struct moon_closure_t {
   uint16_t top;
   uint16_t base;
   uint16_t pc;
-  moon_closure_t * parent;
   moon_hash up_values;
   PGMEM_ADDRESS prototype_addr;
   uint16_t prototype_addr_cursor;
   moon_reference * registers[MOON_MAX_REGISTERS];
+  moon_reference * upvalues[MOON_MAX_UPVALUES];
   moon_reference result;
 } moon_closure;
 

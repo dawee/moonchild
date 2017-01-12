@@ -42,6 +42,7 @@ static void create_number_value(moon_reference * reference, CTYPE_LUA_NUMBER num
 }
 
 static void init_registers(moon_closure * closure);
+static void init_upvalues(moon_closure * closure);
 static void init_hash(moon_hash * hash);
 
 static moon_closure * create_closure(PGMEM_ADDRESS prototype_addr, uint16_t prototype_addr_cursor = 0, moon_closure * parent = NULL) {
@@ -49,12 +50,12 @@ static moon_closure * create_closure(PGMEM_ADDRESS prototype_addr, uint16_t prot
 
   closure->type = LUA_CLOSURE;
   closure->nodes = 0;
-  closure->parent = parent;
   closure->prototype_addr = prototype_addr;
   closure->prototype_addr_cursor = prototype_addr_cursor;
 
   init_hash(&(closure->up_values));
   init_registers(closure);
+  init_upvalues(closure);
   set_to_nil(&(closure->result));
 
   return closure;
@@ -345,6 +346,12 @@ static void create_register(moon_closure * closure, uint16_t index) {
 static void init_registers(moon_closure * closure) {
   for (uint16_t index = 0; index < MOON_MAX_REGISTERS; ++index) {
     closure->registers[index] = NULL;
+  }
+}
+
+static void init_upvalues(moon_closure * closure) {
+  for (uint16_t index = 0; index < MOON_MAX_UPVALUES; ++index) {
+    closure->upvalues[index] = NULL;
   }
 }
 
