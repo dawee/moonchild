@@ -181,6 +181,10 @@ static void read_closure_prototype(moon_prototype * prototype, moon_closure * cl
   progmem_cpy(prototype, closure->prototype_addr, sizeof(moon_prototype), sizeof(moon_prototype) * closure->prototype_addr_cursor);
 }
 
+static void read_prototype_upvalue(moon_upvalue * upvalue, moon_prototype * prototype, uint16_t index) {
+  progmem_cpy(upvalue, prototype->upvalues_addr, sizeof(moon_upvalue), sizeof(moon_upvalue) * index);
+}
+
 static BOOL equals_string(moon_reference * ref_a, moon_reference * ref_b) {
   BOOL result = TRUE;
 
@@ -365,6 +369,23 @@ static void create_registers(moon_closure * closure) {
   }
 }
 
+static void create_upvalues(moon_closure * closure, moon_closure * parent) {
+  moon_prototype prototype;
+  moon_upvalue upvalue;
+
+  read_closure_prototype(&prototype, closure);
+
+  for (uint16_t index = 0; index < prototype.upvalues_count; ++index) {
+    read_prototype_upvalue(&upvalue, &prototype, index);
+
+    if (upvalue.in_stack == 1) {
+      closure->upvalues[index] = parent->registers[upvalue.idx];
+    } else {
+      closure->upvalues[index] = parent->upvalues[upvalue.idx];
+    }
+  }
+}
+
 static void delete_registers(moon_closure * closure) {
   moon_prototype prototype;
 
@@ -377,7 +398,6 @@ static void delete_registers(moon_closure * closure) {
     }
   }
 }
-
 
 static void init_prototype(moon_prototype * prototype, PGMEM_ADDRESS prototype_addr) {
   progmem_cpy(prototype, prototype_addr, sizeof(moon_prototype));
@@ -599,12 +619,13 @@ static void copy_op_bufs(moon_reference * bufb_ref, moon_reference * bufc_ref, m
 
 static void run_instruction(moon_instruction * instruction, moon_closure * closure);
 
-static void run_closure(moon_closure * closure) {
+static void run_closure(moon_closure * closure, moon_closure * parent = NULL) {
   moon_prototype prototype;
   moon_instruction instruction;
 
   read_closure_prototype(&prototype, closure);
   create_registers(closure);
+  if (parent != NULL) create_upvalues(closure, parent);
 
   closure->pc = 0;
 
@@ -886,6 +907,13 @@ static void op_gettabup(moon_instruction * instruction, moon_closure * closure) 
   if (bufc_ref.is_copy == TRUE) delete_value((moon_value *) bufc_ref.value_addr);
 }
 
+static void op_setupval(moon_instruction * instruction, moon_closure * closure) {
+  uint8_t instruction_a = MOON_READ_A(instruction);
+  uint16_t instruction_b = MOON_READ_B(instruction);
+
+  copy_reference(closure->upvalues[instruction_a], closure->registers[instruction_b]);
+}
+
 static void op_call(moon_instruction * instruction, moon_closure * closure) {
   uint8_t instruction_a = MOON_READ_A(instruction);
   uint16_t instruction_b = MOON_READ_B(instruction);
@@ -911,7 +939,7 @@ static void op_call(moon_instruction * instruction, moon_closure * closure) {
     copy_to_params(closure, sub_closure);
   }
 
-  run_closure(sub_closure);
+  run_closure(sub_closure, closure);
 
   if (instruction_c != 1) {
     // @TODO : manage multiple results (c > 2)
@@ -1016,6 +1044,9 @@ static void run_instruction(moon_instruction * instruction, moon_closure * closu
       break;
     case OPCODE_GETTABUP:
       op_gettabup(instruction, closure);
+      break;
+    case OPCODE_SETUPVAL:
+      op_setupval(instruction, closure);
       break;
     case OPCODE_TAILCALL:  // WEAK, @TODO : real tailcall
     case OPCODE_CALL:
