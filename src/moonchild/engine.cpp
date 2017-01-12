@@ -914,6 +914,13 @@ static void op_setupval(moon_instruction * instruction, moon_closure * closure) 
   copy_reference(closure->upvalues[instruction_a], closure->registers[instruction_b]);
 }
 
+static void op_getupval(moon_instruction * instruction, moon_closure * closure) {
+  uint8_t instruction_a = MOON_READ_A(instruction);
+  uint16_t instruction_b = MOON_READ_B(instruction);
+
+  copy_reference(closure->registers[instruction_a], closure->upvalues[instruction_b]);
+}
+
 static void op_call(moon_instruction * instruction, moon_closure * closure) {
   uint8_t instruction_a = MOON_READ_A(instruction);
   uint16_t instruction_b = MOON_READ_B(instruction);
@@ -1047,6 +1054,9 @@ static void run_instruction(moon_instruction * instruction, moon_closure * closu
       break;
     case OPCODE_SETUPVAL:
       op_setupval(instruction, closure);
+      break;
+    case OPCODE_GETUPVAL:
+      op_getupval(instruction, closure);
       break;
     case OPCODE_TAILCALL:  // WEAK, @TODO : real tailcall
     case OPCODE_CALL:
