@@ -936,8 +936,6 @@ static void op_call(moon_instruction * instruction, moon_closure * closure) {
 
   sub_closure = (moon_closure *) closure->registers[instruction_a]->value_addr;
 
-  create_registers(sub_closure);
-
   closure->base = instruction_a + 1;
 
   if (instruction_b != 1) {
