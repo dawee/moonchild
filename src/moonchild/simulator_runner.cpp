@@ -19,6 +19,7 @@ void moon_arch_run(PGMEM_ADDRESS prototype_addr) {
 }
 
 int main() {
+  moon_init();
   moon_run_generated();
   return 0;
 }

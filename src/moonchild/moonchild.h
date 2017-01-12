@@ -184,7 +184,9 @@ typedef struct moon_closure_t {
   uint16_t top;
   uint16_t base;
   uint16_t pc;
-  moon_hash up_values;
+  BOOL is_prebuilt;
+  void (*prebuilt_function)(moon_closure_t *);
+  moon_hash in_upvalues;
   PGMEM_ADDRESS prototype_addr;
   uint16_t prototype_addr_cursor;
   moon_reference * registers[MOON_MAX_REGISTERS];
@@ -210,14 +212,16 @@ const moon_value MOON_FALSE_VALUE PROGMEM = {.type = LUA_FALSE, .nodes = 1};
 
 #define MOON_IS_ARITHMETIC(ref) (MOON_IS_INT(ref) || MOON_IS_NUMBER(ref))
 
-#define MOON_AS_VALUE(ref) ((moon_value *)(ref->value_addr))
-#define MOON_AS_NUMBER(ref) ((moon_number_value *)(ref->value_addr))
-#define MOON_AS_INT(ref) ((moon_int_value *)(ref->value_addr))
-#define MOON_AS_STRING(ref) ((moon_string_value *)(ref->value_addr))
+#define MOON_AS_VALUE(ref) ((moon_value *)((ref)->value_addr))
+#define MOON_AS_NUMBER(ref) ((moon_number_value *)((ref)->value_addr))
+#define MOON_AS_INT(ref) ((moon_int_value *)((ref)->value_addr))
+#define MOON_AS_STRING(ref) ((moon_string_value *)((ref)->value_addr))
 #define MOON_AS_CSTRING(ref) ((char *)(MOON_AS_STRING(ref)->string_addr))
 
+void moon_init();
 void moon_run_generated();
 void moon_arch_run(PGMEM_ADDRESS prototype_addr);
 void moon_run(PGMEM_ADDRESS prototype_addr, char * result);
+
 
 #endif

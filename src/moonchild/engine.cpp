@@ -3,6 +3,8 @@
 #include <stdio.h>
 #include <stdlib.h>
 
+static moon_hash globals_hash;
+
 
 static void progmem_cpy(void * dest, PGMEM_ADDRESS src, uint16_t size, uint16_t offset = 0) {
   char * cdest = (char *)dest;
@@ -41,6 +43,25 @@ static void create_number_value(moon_reference * reference, CTYPE_LUA_NUMBER num
   ((moon_number_value *) reference->value_addr)->nodes = 1;
 }
 
+static void create_string_value(moon_reference * reference, const char * str) {
+  uint16_t length = 0;
+
+  while(str[length] != '\0') ++length;
+
+  reference->value_addr = (SRAM_ADDRESS) malloc(sizeof(moon_string_value));
+
+  MOON_AS_STRING(reference)->type = LUA_STRING;
+  MOON_AS_STRING(reference)->nodes = 1;
+  MOON_AS_STRING(reference)->string_addr = (SRAM_ADDRESS) malloc(length + 1);
+  MOON_AS_STRING(reference)->length = length;
+
+  for (uint16_t index = 0; index < length; ++index) {
+    MOON_AS_CSTRING(reference)[index] = str[index];
+  }
+
+  MOON_AS_CSTRING(reference)[length] = '\0';
+}
+
 static void init_registers(moon_closure * closure);
 static void init_upvalues(moon_closure * closure);
 static void init_hash(moon_hash * hash);
@@ -53,7 +74,7 @@ static moon_closure * create_closure(PGMEM_ADDRESS prototype_addr, uint16_t prot
   closure->prototype_addr = prototype_addr;
   closure->prototype_addr_cursor = prototype_addr_cursor;
 
-  init_hash(&(closure->up_values));
+  init_hash(&(closure->in_upvalues));
   init_registers(closure);
   init_upvalues(closure);
   set_to_nil(&(closure->result));
@@ -292,8 +313,8 @@ static void set_hash_pair(moon_hash * hash, moon_reference * key_reference, moon
   hash->count++;
 }
 
-static void find_hash_value(moon_reference * result, moon_hash * hash, moon_reference * key_reference) {
-  BOOL found;
+static BOOL find_hash_value(moon_reference * result, moon_hash * hash, moon_reference * key_reference) {
+  BOOL found = FALSE;
   char * key_str;
   char * input_key_str;
   moon_string_value * key_as_val;
@@ -330,8 +351,15 @@ static void find_hash_value(moon_reference * result, moon_hash * hash, moon_refe
   }
 
   if (buf_ref.is_copy == TRUE) delete_value((moon_value *) buf_ref.value_addr);
+
+  return found;
 }
 
+static BOOL find_closure_value(moon_reference * result, moon_closure * closure, moon_reference * key_reference) {
+  if (find_hash_value(result, &(closure->in_upvalues), key_reference) == TRUE) return TRUE;
+
+  return find_hash_value(result, &globals_hash, key_reference);
+}
 
 static void copy_constant_reference(moon_reference * dest, moon_prototype * prototype, uint16_t index) {
   moon_reference constant_reference;
@@ -878,7 +906,7 @@ static void op_settabup(moon_instruction * instruction, moon_closure * closure) 
   moon_reference bufc_ref;
 
   copy_op_bufs(&bufb_ref, &bufc_ref, instruction, closure);
-  set_hash_pair(&(closure->up_values), &bufb_ref, &bufc_ref);
+  set_hash_pair(&(closure->in_upvalues), &bufb_ref, &bufc_ref);
 
   if (bufb_ref.is_copy == TRUE) delete_value((moon_value *) bufb_ref.value_addr);
   if (bufc_ref.is_copy == TRUE) delete_value((moon_value *) bufc_ref.value_addr);
@@ -902,7 +930,7 @@ static void op_gettabup(moon_instruction * instruction, moon_closure * closure) 
     copy_reference(&bufc_ref, closure->registers[instruction_c]);
   }
 
-  find_hash_value(closure->registers[instruction_a], &(closure->up_values), &bufc_ref);
+  find_closure_value(closure->registers[instruction_a], closure, &bufc_ref);
 
   if (bufc_ref.is_copy == TRUE) delete_value((moon_value *) bufc_ref.value_addr);
 }
@@ -1094,6 +1122,20 @@ static void run_instruction(moon_instruction * instruction, moon_closure * closu
   closure->pc++;
 }
 
+
+
+static void add_global(const char * key_str, moon_reference * value_reference) {
+  moon_reference key_reference = {.is_progmem = FALSE, .is_copy = FALSE, .value_addr = NULL};
+
+  create_string_value(&key_reference, key_str);
+  set_hash_pair(&globals_hash, &key_reference, value_reference);
+}
+
+void moon_init() {
+  moon_reference foo_reference = {.is_progmem = FALSE, .is_copy = FALSE, .value_addr = NULL};
+
+  init_hash(&globals_hash);
+}
 
 void moon_run(PGMEM_ADDRESS prototype_addr, char * result) {
   moon_closure * closure = create_closure(prototype_addr);
