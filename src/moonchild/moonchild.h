@@ -159,6 +159,11 @@ typedef struct {
 } moon_hash;
 
 typedef struct {
+  uint8_t in_stack;
+  uint8_t idx;
+} moon_upvalue;
+
+typedef struct {
   uint8_t num_params;
   uint8_t is_varargs;
   uint8_t max_stack_size;
@@ -168,6 +173,8 @@ typedef struct {
   PGMEM_ADDRESS constants_addr;
   uint16_t prototypes_count;
   PGMEM_ADDRESS prototypes_addr;
+  uint16_t upvalues_count;
+  PGMEM_ADDRESS upvalues_addr;
 } moon_prototype;
 
 typedef struct moon_closure_t {
