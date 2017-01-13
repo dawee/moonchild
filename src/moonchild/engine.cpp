@@ -995,7 +995,8 @@ static void op_call(moon_instruction * instruction, moon_closure * closure) {
       if (instruction_c == 0) closure->top = instruction_a + 1;
     }
 
-    delete_registers(sub_closure);
+    // @TODO : delete registers managing upvalues
+    // delete_registers(sub_closure);
     set_to_nil(&(sub_closure->result));
   }
 
