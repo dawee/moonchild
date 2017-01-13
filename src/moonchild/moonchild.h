@@ -108,6 +108,7 @@ enum MOON_TYPES {
   LUA_NUMBER,
   LUA_STRING,
   LUA_CLOSURE,
+  LUA_API,
 };
 
 typedef int16_t CTYPE_LUA_INT;
@@ -184,8 +185,6 @@ typedef struct moon_closure_t {
   uint16_t top;
   uint16_t base;
   uint16_t pc;
-  BOOL is_prebuilt;
-  void (*prebuilt_function)(moon_closure_t *);
   moon_hash in_upvalues;
   PGMEM_ADDRESS prototype_addr;
   uint16_t prototype_addr_cursor;
@@ -193,6 +192,13 @@ typedef struct moon_closure_t {
   moon_reference * upvalues[MOON_MAX_UPVALUES];
   moon_reference result;
 } moon_closure;
+
+typedef struct {
+  uint8_t type;
+  uint16_t nodes;
+  void (*func)(moon_closure *, BOOL);
+} moon_api_value;
+
 
 const moon_value MOON_NIL_VALUE PROGMEM = {.type = LUA_NIL, .nodes = 1};
 const moon_value MOON_TRUE_VALUE PROGMEM = {.type = LUA_TRUE, .nodes = 1};
@@ -217,6 +223,7 @@ const moon_value MOON_FALSE_VALUE PROGMEM = {.type = LUA_FALSE, .nodes = 1};
 #define MOON_AS_INT(ref) ((moon_int_value *)((ref)->value_addr))
 #define MOON_AS_STRING(ref) ((moon_string_value *)((ref)->value_addr))
 #define MOON_AS_CSTRING(ref) ((char *)(MOON_AS_STRING(ref)->string_addr))
+#define MOON_AS_API(ref) ((moon_api_value *)((ref)->value_addr))
 
 void moon_init();
 void moon_run_generated();

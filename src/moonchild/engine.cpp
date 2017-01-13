@@ -62,6 +62,13 @@ static void create_string_value(moon_reference * reference, const char * str) {
   MOON_AS_CSTRING(reference)[length] = '\0';
 }
 
+static void create_api_value(moon_reference * reference, void (*api_func)(moon_closure *, BOOL)) {
+  reference->value_addr = (SRAM_ADDRESS) malloc(sizeof(moon_api_value));
+  MOON_AS_API(reference)->type = LUA_API;
+  MOON_AS_API(reference)->nodes = 1;
+  MOON_AS_API(reference)->func = api_func;
+}
+
 static void init_registers(moon_closure * closure);
 static void init_upvalues(moon_closure * closure);
 static void init_hash(moon_hash * hash);
@@ -139,6 +146,13 @@ static void create_progmem_value_copy(moon_reference * dest, moon_reference * sr
       ((char *)(((moon_string_value *) dest->value_addr)->string_addr))[((moon_string_value *) dest->value_addr)->length] = '\0';
 
       dest->is_copy = TRUE;
+      break;
+
+    case LUA_API:
+      dest->value_addr = (SRAM_ADDRESS) malloc(sizeof(moon_api_value));
+      progmem_cpy(dest->value_addr, src->value_addr, sizeof(moon_api_value));
+      dest->is_copy = TRUE;
+      dest->is_progmem = FALSE;
       break;
 
     default:
@@ -957,31 +971,33 @@ static void op_call(moon_instruction * instruction, moon_closure * closure) {
   moon_closure * sub_closure;
   moon_reference bufa_ref;
 
-  if (((moon_value *) closure->registers[instruction_a]->value_addr)->type != LUA_CLOSURE) {
+  closure->base = instruction_a + 1;
+
+  if (instruction_b > 1) closure->top = closure->base + (instruction_b - 1);
+
+  if (MOON_AS_VALUE(closure->registers[instruction_a])->type != LUA_CLOSURE && MOON_AS_VALUE(closure->registers[instruction_a])->type != LUA_API) {
     moon_debug("error: trying to call a non closure type");
     return;
   }
 
-  sub_closure = (moon_closure *) closure->registers[instruction_a]->value_addr;
+  if (MOON_AS_VALUE(closure->registers[instruction_a])->type == LUA_API) {
+    (*MOON_AS_API(closure->registers[instruction_a])->func)(closure, (instruction_b != 1) ? TRUE : FALSE);
+  } else {
+    sub_closure = (moon_closure *) closure->registers[instruction_a]->value_addr;
 
-  closure->base = instruction_a + 1;
+    if (instruction_b != 1) copy_to_params(closure, sub_closure);
 
-  if (instruction_b != 1) {
-    if (instruction_b > 1) closure->top = closure->base + (instruction_b - 1);
+    run_closure(sub_closure, closure);
 
-    copy_to_params(closure, sub_closure);
+    if (instruction_c != 1) {
+      // @TODO : manage multiple results (c > 2)
+      copy_reference(closure->registers[instruction_a], &(sub_closure->result));
+      if (instruction_c == 0) closure->top = instruction_a + 1;
+    }
+
+    delete_registers(sub_closure);
+    set_to_nil(&(sub_closure->result));
   }
-
-  run_closure(sub_closure, closure);
-
-  if (instruction_c != 1) {
-    // @TODO : manage multiple results (c > 2)
-    copy_reference(closure->registers[instruction_a], &(sub_closure->result));
-    if (instruction_c == 0) closure->top = instruction_a + 1;
-  }
-
-  delete_registers(sub_closure);
-  set_to_nil(&(sub_closure->result));
 
   if (bufa_ref.is_copy == TRUE) delete_value((moon_value *) bufa_ref.value_addr);
 }
@@ -1122,8 +1138,6 @@ static void run_instruction(moon_instruction * instruction, moon_closure * closu
   closure->pc++;
 }
 
-
-
 static void add_global(const char * key_str, moon_reference * value_reference) {
   moon_reference key_reference = {.is_progmem = FALSE, .is_copy = FALSE, .value_addr = NULL};
 
@@ -1131,9 +1145,14 @@ static void add_global(const char * key_str, moon_reference * value_reference) {
   set_hash_pair(&globals_hash, &key_reference, value_reference);
 }
 
-void moon_init() {
-  moon_reference foo_reference = {.is_progmem = FALSE, .is_copy = FALSE, .value_addr = NULL};
+static void add_global_api_func(const char * key_str, void (*api_func)(moon_closure *, BOOL)) {
+  moon_reference reference;
 
+  create_api_value(&reference, api_func);
+  add_global(key_str, &reference);
+}
+
+void moon_init() {
   init_hash(&globals_hash);
 }
 
