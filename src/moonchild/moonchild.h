@@ -223,12 +223,20 @@ const moon_value MOON_FALSE_VALUE PROGMEM = {.type = LUA_FALSE, .nodes = 1};
 #define MOON_AS_INT(ref) ((moon_int_value *)((ref)->value_addr))
 #define MOON_AS_STRING(ref) ((moon_string_value *)((ref)->value_addr))
 #define MOON_AS_CSTRING(ref) ((char *)(MOON_AS_STRING(ref)->string_addr))
+#define MOON_AS_CLOSURE(ref) ((moon_closure *)((ref)->value_addr))
 #define MOON_AS_API(ref) ((moon_api_value *)((ref)->value_addr))
 
 void moon_init();
 void moon_run_generated();
 void moon_arch_run(PGMEM_ADDRESS prototype_addr);
 void moon_run(PGMEM_ADDRESS prototype_addr, char * result);
-
+void moon_run_closure(moon_closure * closure, moon_closure * parent = NULL);
+moon_closure * moon_create_closure(PGMEM_ADDRESS prototype_addr, uint16_t prototype_addr_cursor = 0, moon_closure * parent = NULL);
+void moon_create_string_value(moon_reference * reference, const char * str);
+BOOL moon_find_closure_value(moon_reference * result, moon_closure * closure, moon_reference * key_reference);
+void moon_add_global_api_func(const char * key_str, void (*api_func)(moon_closure *, BOOL));
+void moon_ref_to_cstr(char * result, moon_reference * reference);
+void moon_create_value_copy(moon_reference * dest, moon_reference * src);
+void moon_delete_value(moon_value * value);
 
 #endif

@@ -11,11 +11,23 @@ char progmem_read(PGMEM_ADDRESS mem_addr, uint16_t offset) {
 
 
 void moon_arch_run(PGMEM_ADDRESS prototype_addr) {
-  char buffer[255];
+  BOOL has_update;
 
-  moon_run(prototype_addr, buffer);
+  moon_reference key_reference;
+  moon_reference update_reference;
+  moon_closure * closure = moon_create_closure(prototype_addr);
 
-  printf("%s\n", buffer);
+  moon_create_string_value(&key_reference, "update");
+
+  moon_run_closure(closure);
+
+  has_update = moon_find_closure_value(&update_reference, closure, &key_reference);
+
+  if (has_update == TRUE && MOON_AS_VALUE(&update_reference)->type == LUA_CLOSURE) {
+
+    moon_run_closure(MOON_AS_CLOSURE(&update_reference));
+    moon_debug("update exists\n");
+  }
 }
 
 int main() {

@@ -43,7 +43,7 @@ static void create_number_value(moon_reference * reference, CTYPE_LUA_NUMBER num
   ((moon_number_value *) reference->value_addr)->nodes = 1;
 }
 
-static void create_string_value(moon_reference * reference, const char * str) {
+void moon_create_string_value(moon_reference * reference, const char * str) {
   uint16_t length = 0;
 
   while(str[length] != '\0') ++length;
@@ -73,7 +73,7 @@ static void init_registers(moon_closure * closure);
 static void init_upvalues(moon_closure * closure);
 static void init_hash(moon_hash * hash);
 
-static moon_closure * create_closure(PGMEM_ADDRESS prototype_addr, uint16_t prototype_addr_cursor = 0, moon_closure * parent = NULL) {
+moon_closure * moon_create_closure(PGMEM_ADDRESS prototype_addr, uint16_t prototype_addr_cursor, moon_closure * parent) {
   moon_closure * closure = (moon_closure *) malloc(sizeof(moon_closure));
 
   closure->type = LUA_CLOSURE;
@@ -93,7 +93,7 @@ static moon_prototype * create_prototype() {
   return (moon_prototype *) malloc(sizeof(moon_prototype));
 }
 
-static void delete_value(moon_value * value) {
+void moon_delete_value(moon_value * value) {
   if (value == NULL) return;
 
   if (value->type == LUA_STRING) {
@@ -166,7 +166,7 @@ static void copy_reference(moon_reference * dest, moon_reference * src) {
   dest->value_addr = src->value_addr;
 }
 
-static void create_value_copy(moon_reference * dest, moon_reference * src) {
+void moon_create_value_copy(moon_reference * dest, moon_reference * src) {
   if (src->is_progmem == TRUE) {
     create_progmem_value_copy(dest, src);
   } else {
@@ -174,10 +174,10 @@ static void create_value_copy(moon_reference * dest, moon_reference * src) {
   }
 }
 
-static void ref_to_str(char * result, moon_reference * reference) {
+void moon_ref_to_cstr(char * result, moon_reference * reference) {
   moon_reference buf_ref;
 
-  create_value_copy(&buf_ref, reference);
+  moon_create_value_copy(&buf_ref, reference);
 
   switch(((moon_value *) buf_ref.value_addr)->type) {
     case LUA_NIL:
@@ -204,7 +204,7 @@ static void ref_to_str(char * result, moon_reference * reference) {
       break;
   };
 
-  if (buf_ref.is_copy == TRUE) delete_value((moon_value *) buf_ref.value_addr);
+  if (buf_ref.is_copy == TRUE) moon_delete_value((moon_value *) buf_ref.value_addr);
 }
 
 
@@ -314,7 +314,7 @@ static void init_hash(moon_hash * hash) {
 static void set_hash_pair(moon_hash * hash, moon_reference * key_reference, moon_reference * value_reference) {
   moon_hash_pair * pair = (moon_hash_pair *) malloc(sizeof(moon_hash_pair));
 
-  create_value_copy(&(pair->key_reference), key_reference);
+  moon_create_value_copy(&(pair->key_reference), key_reference);
   copy_reference(&(pair->value_reference), value_reference);
 
   if (hash->count == 0) {
@@ -337,7 +337,7 @@ static BOOL find_hash_value(moon_reference * result, moon_hash * hash, moon_refe
   moon_string_value * input_key_as_val;
 
   set_to_nil(result);
-  create_value_copy(&buf_ref, key_reference);
+  moon_create_value_copy(&buf_ref, key_reference);
 
   input_key_as_val = (moon_string_value *) buf_ref.value_addr;
   input_key_str = (char *) input_key_as_val->string_addr;
@@ -364,12 +364,12 @@ static BOOL find_hash_value(moon_reference * result, moon_hash * hash, moon_refe
     pair = pair->next;
   }
 
-  if (buf_ref.is_copy == TRUE) delete_value((moon_value *) buf_ref.value_addr);
+  if (buf_ref.is_copy == TRUE) moon_delete_value((moon_value *) buf_ref.value_addr);
 
   return found;
 }
 
-static BOOL find_closure_value(moon_reference * result, moon_closure * closure, moon_reference * key_reference) {
+BOOL moon_find_closure_value(moon_reference * result, moon_closure * closure, moon_reference * key_reference) {
   if (find_hash_value(result, &(closure->in_upvalues), key_reference) == TRUE) return TRUE;
 
   return find_hash_value(result, &globals_hash, key_reference);
@@ -606,9 +606,9 @@ static void create_opb_buf(moon_reference * bufb_ref, moon_instruction * instruc
 
  if (MOON_IS_OPBK(instruction)) {
     read_constant_reference(&const_ref, &prototype, instruction_b);
-    create_value_copy(bufb_ref, &const_ref);
+    moon_create_value_copy(bufb_ref, &const_ref);
   } else {
-    create_value_copy(bufb_ref, closure->registers[instruction_b]);
+    moon_create_value_copy(bufb_ref, closure->registers[instruction_b]);
   }
 }
 
@@ -622,9 +622,9 @@ static void create_opc_buf(moon_reference * bufc_ref, moon_instruction * instruc
 
  if (MOON_IS_OPCK(instruction)) {
     read_constant_reference(&const_ref, &prototype, instruction_c);
-    create_value_copy(bufc_ref, &const_ref);
+    moon_create_value_copy(bufc_ref, &const_ref);
   } else {
-    create_value_copy(bufc_ref, closure->registers[instruction_c]);
+    moon_create_value_copy(bufc_ref, closure->registers[instruction_c]);
   }
 }
 
@@ -646,7 +646,7 @@ static void copy_op_bufs(moon_reference * bufb_ref, moon_reference * bufc_ref, m
   read_closure_prototype(&prototype, closure);
 
   if (MOON_IS_OPCK(instruction)) {
-    create_value_copy(bufb_ref, closure->registers[instruction_b]);
+    moon_create_value_copy(bufb_ref, closure->registers[instruction_b]);
     read_constant_reference(&const_ref, &prototype, instruction_c);
     copy_reference(bufc_ref, &const_ref);
   } else if (MOON_IS_OPBK(instruction)) {
@@ -661,7 +661,7 @@ static void copy_op_bufs(moon_reference * bufb_ref, moon_reference * bufc_ref, m
 
 static void run_instruction(moon_instruction * instruction, moon_closure * closure);
 
-static void run_closure(moon_closure * closure, moon_closure * parent = NULL) {
+void moon_run_closure(moon_closure * closure, moon_closure * parent) {
   moon_prototype prototype;
   moon_instruction instruction;
 
@@ -734,8 +734,8 @@ static void op_add(moon_instruction * instruction, moon_closure * closure) {
   create_op_add_result(closure->registers[instruction_a], (moon_value *) bufb_ref.value_addr, (moon_value *) bufc_ref.value_addr);
   closure->registers[instruction_a]->is_progmem = FALSE;
 
-  if (bufb_ref.is_copy == TRUE) delete_value((moon_value *) bufb_ref.value_addr);
-  if (bufc_ref.is_copy == TRUE) delete_value((moon_value *) bufc_ref.value_addr);
+  if (bufb_ref.is_copy == TRUE) moon_delete_value((moon_value *) bufb_ref.value_addr);
+  if (bufc_ref.is_copy == TRUE) moon_delete_value((moon_value *) bufc_ref.value_addr);
 }
 
 static void op_sub(moon_instruction * instruction, moon_closure * closure) {
@@ -750,8 +750,8 @@ static void op_sub(moon_instruction * instruction, moon_closure * closure) {
   create_op_sub_result(closure->registers[instruction_a], (moon_value *) bufb_ref.value_addr, (moon_value *) bufc_ref.value_addr);
   closure->registers[instruction_a]->is_progmem = FALSE;
 
-  if (bufb_ref.is_copy == TRUE) delete_value((moon_value *) bufb_ref.value_addr);
-  if (bufc_ref.is_copy == TRUE) delete_value((moon_value *) bufc_ref.value_addr);
+  if (bufb_ref.is_copy == TRUE) moon_delete_value((moon_value *) bufb_ref.value_addr);
+  if (bufc_ref.is_copy == TRUE) moon_delete_value((moon_value *) bufc_ref.value_addr);
 }
 
 static void op_mul(moon_instruction * instruction, moon_closure * closure) {
@@ -766,8 +766,8 @@ static void op_mul(moon_instruction * instruction, moon_closure * closure) {
   create_op_mul_result(closure->registers[instruction_a], (moon_value *) bufb_ref.value_addr, (moon_value *) bufc_ref.value_addr);
   closure->registers[instruction_a]->is_progmem = FALSE;
 
-  if (bufb_ref.is_copy == TRUE) delete_value((moon_value *) bufb_ref.value_addr);
-  if (bufc_ref.is_copy == TRUE) delete_value((moon_value *) bufc_ref.value_addr);
+  if (bufb_ref.is_copy == TRUE) moon_delete_value((moon_value *) bufb_ref.value_addr);
+  if (bufc_ref.is_copy == TRUE) moon_delete_value((moon_value *) bufc_ref.value_addr);
 }
 
 static void op_div(moon_instruction * instruction, moon_closure * closure) {
@@ -782,8 +782,8 @@ static void op_div(moon_instruction * instruction, moon_closure * closure) {
   create_op_div_result(closure->registers[instruction_a], (moon_value *) bufb_ref.value_addr, (moon_value *) bufc_ref.value_addr);
   closure->registers[instruction_a]->is_progmem = FALSE;
 
-  if (bufb_ref.is_copy == TRUE) delete_value((moon_value *) bufb_ref.value_addr);
-  if (bufc_ref.is_copy == TRUE) delete_value((moon_value *) bufc_ref.value_addr);
+  if (bufb_ref.is_copy == TRUE) moon_delete_value((moon_value *) bufb_ref.value_addr);
+  if (bufc_ref.is_copy == TRUE) moon_delete_value((moon_value *) bufc_ref.value_addr);
 }
 
 static void op_idiv(moon_instruction * instruction, moon_closure * closure) {
@@ -820,8 +820,8 @@ static void op_concat(moon_instruction * instruction, moon_closure * closure) {
   create_op_concat_result(closure->registers[instruction_a], (moon_value *) bufb_ref.value_addr, (moon_value *) bufc_ref.value_addr);
   closure->registers[instruction_a]->is_progmem = FALSE;
 
-  if (bufb_ref.is_copy == TRUE) delete_value((moon_value *) bufb_ref.value_addr);
-  if (bufc_ref.is_copy == TRUE) delete_value((moon_value *) bufc_ref.value_addr);
+  if (bufb_ref.is_copy == TRUE) moon_delete_value((moon_value *) bufb_ref.value_addr);
+  if (bufc_ref.is_copy == TRUE) moon_delete_value((moon_value *) bufc_ref.value_addr);
 }
 
 static void op_eq(moon_instruction * instruction, moon_closure * closure) {
@@ -838,8 +838,8 @@ static void op_eq(moon_instruction * instruction, moon_closure * closure) {
     closure->pc++;
   }
 
-  if (bufb_ref.is_copy == TRUE) delete_value((moon_value *) bufb_ref.value_addr);
-  if (bufc_ref.is_copy == TRUE) delete_value((moon_value *) bufc_ref.value_addr);
+  if (bufb_ref.is_copy == TRUE) moon_delete_value((moon_value *) bufb_ref.value_addr);
+  if (bufc_ref.is_copy == TRUE) moon_delete_value((moon_value *) bufc_ref.value_addr);
 }
 
 static void op_lt(moon_instruction * instruction, moon_closure * closure) {
@@ -856,8 +856,8 @@ static void op_lt(moon_instruction * instruction, moon_closure * closure) {
     closure->pc++;
   }
 
-  if (bufb_ref.is_copy == TRUE) delete_value((moon_value *) bufb_ref.value_addr);
-  if (bufc_ref.is_copy == TRUE) delete_value((moon_value *) bufc_ref.value_addr);
+  if (bufb_ref.is_copy == TRUE) moon_delete_value((moon_value *) bufb_ref.value_addr);
+  if (bufc_ref.is_copy == TRUE) moon_delete_value((moon_value *) bufc_ref.value_addr);
 }
 
 static void op_le(moon_instruction * instruction, moon_closure * closure) {
@@ -875,8 +875,8 @@ static void op_le(moon_instruction * instruction, moon_closure * closure) {
     closure->pc++;
   }
 
-  if (bufb_ref.is_copy == TRUE) delete_value((moon_value *) bufb_ref.value_addr);
-  if (bufc_ref.is_copy == TRUE) delete_value((moon_value *) bufc_ref.value_addr);
+  if (bufb_ref.is_copy == TRUE) moon_delete_value((moon_value *) bufb_ref.value_addr);
+  if (bufc_ref.is_copy == TRUE) moon_delete_value((moon_value *) bufc_ref.value_addr);
 }
 
 static void op_not(moon_instruction * instruction, moon_closure * closure) {
@@ -893,7 +893,7 @@ static void op_not(moon_instruction * instruction, moon_closure * closure) {
     set_to_true(closure->registers[instruction_a]);
   }
 
-  if (bufb_ref.is_copy == TRUE) delete_value((moon_value *) bufb_ref.value_addr);
+  if (bufb_ref.is_copy == TRUE) moon_delete_value((moon_value *) bufb_ref.value_addr);
 }
 
 static void op_closure(moon_instruction * instruction, moon_closure * closure) {
@@ -904,7 +904,7 @@ static void op_closure(moon_instruction * instruction, moon_closure * closure) {
   moon_prototype prototype;
 
   read_closure_prototype(&prototype, closure);
-  sub_closure = create_closure(prototype.prototypes_addr, instruction_bx, closure);
+  sub_closure = moon_create_closure(prototype.prototypes_addr, instruction_bx, closure);
 
   closure->registers[instruction_a]->value_addr = (SRAM_ADDRESS) sub_closure;
   closure->registers[instruction_a]->is_progmem = FALSE;
@@ -922,8 +922,8 @@ static void op_settabup(moon_instruction * instruction, moon_closure * closure) 
   copy_op_bufs(&bufb_ref, &bufc_ref, instruction, closure);
   set_hash_pair(&(closure->in_upvalues), &bufb_ref, &bufc_ref);
 
-  if (bufb_ref.is_copy == TRUE) delete_value((moon_value *) bufb_ref.value_addr);
-  if (bufc_ref.is_copy == TRUE) delete_value((moon_value *) bufc_ref.value_addr);
+  if (bufb_ref.is_copy == TRUE) moon_delete_value((moon_value *) bufb_ref.value_addr);
+  if (bufc_ref.is_copy == TRUE) moon_delete_value((moon_value *) bufc_ref.value_addr);
 }
 
 static void op_gettabup(moon_instruction * instruction, moon_closure * closure) {
@@ -944,9 +944,9 @@ static void op_gettabup(moon_instruction * instruction, moon_closure * closure) 
     copy_reference(&bufc_ref, closure->registers[instruction_c]);
   }
 
-  find_closure_value(closure->registers[instruction_a], closure, &bufc_ref);
+  moon_find_closure_value(closure->registers[instruction_a], closure, &bufc_ref);
 
-  if (bufc_ref.is_copy == TRUE) delete_value((moon_value *) bufc_ref.value_addr);
+  if (bufc_ref.is_copy == TRUE) moon_delete_value((moon_value *) bufc_ref.value_addr);
 }
 
 static void op_setupval(moon_instruction * instruction, moon_closure * closure) {
@@ -987,7 +987,7 @@ static void op_call(moon_instruction * instruction, moon_closure * closure) {
 
     if (instruction_b != 1) copy_to_params(closure, sub_closure);
 
-    run_closure(sub_closure, closure);
+    moon_run_closure(sub_closure, closure);
 
     if (instruction_c != 1) {
       // @TODO : manage multiple results (c > 2)
@@ -1000,7 +1000,7 @@ static void op_call(moon_instruction * instruction, moon_closure * closure) {
     set_to_nil(&(sub_closure->result));
   }
 
-  if (bufa_ref.is_copy == TRUE) delete_value((moon_value *) bufa_ref.value_addr);
+  if (bufa_ref.is_copy == TRUE) moon_delete_value((moon_value *) bufa_ref.value_addr);
 }
 
 static void op_return(moon_instruction * instruction, moon_closure * closure) {
@@ -1026,13 +1026,13 @@ static void op_test(moon_instruction * instruction, moon_closure * closure) {
   uint16_t instruction_b = MOON_READ_B(instruction);
   uint16_t instruction_c = MOON_READ_C(instruction);
 
-  create_value_copy(&bufa_ref, closure->registers[instruction_a]);
+  moon_create_value_copy(&bufa_ref, closure->registers[instruction_a]);
 
   if ((instruction_c == 0 && (pass_test(&bufa_ref) == TRUE)) || (instruction_c == 1 && (pass_test(&bufa_ref) == FALSE))) {
     closure->pc++;
   }
 
-  if (bufa_ref.is_copy == TRUE) delete_value((moon_value *) bufa_ref.value_addr);
+  if (bufa_ref.is_copy == TRUE) moon_delete_value((moon_value *) bufa_ref.value_addr);
 }
 
 static void op_testset(moon_instruction * instruction, moon_closure * closure) {
@@ -1042,14 +1042,14 @@ static void op_testset(moon_instruction * instruction, moon_closure * closure) {
   uint16_t instruction_b = MOON_READ_B(instruction);
   uint16_t instruction_c = MOON_READ_C(instruction);
 
-  create_value_copy(&bufb_ref, closure->registers[instruction_b]);
+  moon_create_value_copy(&bufb_ref, closure->registers[instruction_b]);
 
   if ((instruction_c == 0 && (pass_test(&bufb_ref) == TRUE)) || (instruction_c == 1 && (pass_test(&bufb_ref) == FALSE))) {
     copy_reference(closure->registers[instruction_a], closure->registers[instruction_b]);
     closure->pc++;
   }
 
-  if (bufb_ref.is_copy == TRUE) delete_value((moon_value *) bufb_ref.value_addr);
+  if (bufb_ref.is_copy == TRUE) moon_delete_value((moon_value *) bufb_ref.value_addr);
 }
 
 static void run_instruction(moon_instruction * instruction, moon_closure * closure) {
@@ -1142,11 +1142,11 @@ static void run_instruction(moon_instruction * instruction, moon_closure * closu
 static void add_global(const char * key_str, moon_reference * value_reference) {
   moon_reference key_reference = {.is_progmem = FALSE, .is_copy = FALSE, .value_addr = NULL};
 
-  create_string_value(&key_reference, key_str);
+  moon_create_string_value(&key_reference, key_str);
   set_hash_pair(&globals_hash, &key_reference, value_reference);
 }
 
-static void add_global_api_func(const char * key_str, void (*api_func)(moon_closure *, BOOL)) {
+void moon_add_global_api_func(const char * key_str, void (*api_func)(moon_closure *, BOOL)) {
   moon_reference reference;
 
   create_api_value(&reference, api_func);
@@ -1158,8 +1158,8 @@ void moon_init() {
 }
 
 void moon_run(PGMEM_ADDRESS prototype_addr, char * result) {
-  moon_closure * closure = create_closure(prototype_addr);
+  moon_closure * closure = moon_create_closure(prototype_addr);
 
-  run_closure(closure);
-  ref_to_str(result, &(closure->result));
+  moon_run_closure(closure);
+  moon_ref_to_cstr(result, &(closure->result));
 }
