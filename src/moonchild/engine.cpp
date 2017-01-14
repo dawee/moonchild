@@ -729,10 +729,21 @@ static void op_add(moon_instruction * instruction, moon_closure * closure) {
 
   moon_reference bufb_ref;
   moon_reference bufc_ref;
+  moon_value * old_value = MOON_AS_VALUE(closure->registers[instruction_a]);
+  BOOL old_value_is_progmem = closure->registers[instruction_a]->is_progmem;
+
 
   create_op_bufs(&bufb_ref, &bufc_ref, instruction, closure);
   create_op_add_result(closure->registers[instruction_a], (moon_value *) bufb_ref.value_addr, (moon_value *) bufc_ref.value_addr);
+  
   closure->registers[instruction_a]->is_progmem = FALSE;
+
+  if (old_value_is_progmem == FALSE) {
+    old_value->nodes--;
+
+    if (old_value->nodes <= 0) moon_delete_value(old_value);
+  }
+
 
   if (bufb_ref.is_copy == TRUE) moon_delete_value((moon_value *) bufb_ref.value_addr);
   if (bufc_ref.is_copy == TRUE) moon_delete_value((moon_value *) bufc_ref.value_addr);
@@ -803,7 +814,7 @@ static void op_move(moon_instruction * instruction, moon_closure * closure) {
 
   copy_reference(closure->registers[instruction_a], closure->registers[instruction_b]);
 
-  if (! closure->registers[instruction_a]->is_progmem) {
+  if (closure->registers[instruction_a]->is_progmem == FALSE) {
     ((moon_value *) closure->registers[instruction_a])->nodes++;
   }
 }
