@@ -239,5 +239,10 @@ void moon_add_global_api_func(const char * key_str, void (*api_func)(moon_closur
 void moon_ref_to_cstr(char * result, moon_reference * reference);
 void moon_create_value_copy(moon_reference * dest, moon_reference * src);
 void moon_delete_value(moon_value * value);
+void moon_set_to_nil(moon_reference * reference);
+void moon_set_to_true(moon_reference * reference);
+void moon_set_to_false(moon_reference * reference);
+void moon_add_global(const char * key_str, moon_reference * value_reference);
+void moon_create_int_value(moon_reference * reference, CTYPE_LUA_INT int_val);
 
 #endif

@@ -14,22 +14,22 @@ static void progmem_cpy(void * dest, PGMEM_ADDRESS src, uint16_t size, uint16_t 
   }
 }
 
-static void set_to_nil(moon_reference * reference) {
+void moon_set_to_nil(moon_reference * reference) {
   reference->is_progmem = TRUE;
   reference->value_addr = (SRAM_ADDRESS) &MOON_NIL_VALUE;
 }
 
-static void set_to_true(moon_reference * reference) {
+void moon_set_to_true(moon_reference * reference) {
   reference->is_progmem = TRUE;
   reference->value_addr = (SRAM_ADDRESS) &MOON_TRUE_VALUE;
 }
 
-static void set_to_false(moon_reference * reference) {
+void moon_set_to_false(moon_reference * reference) {
   reference->is_progmem = TRUE;
   reference->value_addr = (SRAM_ADDRESS) &MOON_FALSE_VALUE;
 }
 
-static void create_int_value(moon_reference * reference, CTYPE_LUA_INT int_val) {
+void moon_create_int_value(moon_reference * reference, CTYPE_LUA_INT int_val) {
   reference->value_addr = (SRAM_ADDRESS) malloc(sizeof(moon_int_value));
   ((moon_int_value *) reference->value_addr)->type = LUA_INT;
   ((moon_int_value *) reference->value_addr)->val = int_val;
@@ -84,7 +84,7 @@ moon_closure * moon_create_closure(PGMEM_ADDRESS prototype_addr, uint16_t protot
   init_hash(&(closure->in_upvalues));
   init_registers(closure);
   init_upvalues(closure);
-  set_to_nil(&(closure->result));
+  moon_set_to_nil(&(closure->result));
 
   return closure;
 }
@@ -336,7 +336,7 @@ static BOOL find_hash_value(moon_reference * result, moon_hash * hash, moon_refe
   moon_hash_pair * pair = hash->first;
   moon_string_value * input_key_as_val;
 
-  set_to_nil(result);
+  moon_set_to_nil(result);
   moon_create_value_copy(&buf_ref, key_reference);
 
   input_key_as_val = (moon_string_value *) buf_ref.value_addr;
@@ -386,7 +386,7 @@ static void create_register(moon_closure * closure, uint16_t index) {
   if (closure->registers[index] != NULL) return;
 
   closure->registers[index] = (moon_reference *) malloc(sizeof(moon_reference));
-  set_to_nil(closure->registers[index]);
+  moon_set_to_nil(closure->registers[index]);
 }
 
 static void init_registers(moon_closure * closure) {
@@ -492,7 +492,7 @@ static void create_result_value(moon_reference * result, moon_value * value_a, m
   if (value_a->type == LUA_NUMBER || value_b->type == LUA_NUMBER) {
     create_number_value(result, number_val);
   } else {
-    create_int_value(result, int_val);
+    moon_create_int_value(result, int_val);
   }
 }
 
@@ -694,7 +694,7 @@ static void op_loadnil(moon_instruction * instruction, moon_closure * closure) {
   uint16_t instruction_b = MOON_READ_B(instruction);
   uint16_t instruction_c = MOON_READ_C(instruction);
 
-  set_to_nil(closure->registers[instruction_a]);
+  moon_set_to_nil(closure->registers[instruction_a]);
 }
 
 static void op_loadbool(moon_instruction * instruction, moon_closure * closure) {
@@ -704,9 +704,9 @@ static void op_loadbool(moon_instruction * instruction, moon_closure * closure) 
 
 
   if (instruction_b == 1) {
-    set_to_true(closure->registers[instruction_a]);
+    moon_set_to_true(closure->registers[instruction_a]);
   } else {
-    set_to_false(closure->registers[instruction_a]);
+    moon_set_to_false(closure->registers[instruction_a]);
   }
 }
 
@@ -801,7 +801,7 @@ static void op_idiv(moon_instruction * instruction, moon_closure * closure) {
   op_div(instruction, closure);
 
   if (MOON_IS_NUMBER(closure->registers[instruction_a])) {
-    create_int_value(closure->registers[instruction_a], (CTYPE_LUA_INT) MOON_AS_NUMBER(closure->registers[instruction_a])->val);
+    moon_create_int_value(closure->registers[instruction_a], (CTYPE_LUA_INT) MOON_AS_NUMBER(closure->registers[instruction_a])->val);
   }
 }
 
@@ -897,9 +897,9 @@ static void op_not(moon_instruction * instruction, moon_closure * closure) {
   create_opb_buf(&bufb_ref, instruction, closure);
 
   if (pass_test(&bufb_ref) == TRUE) {
-    set_to_false(closure->registers[instruction_a]);
+    moon_set_to_false(closure->registers[instruction_a]);
   } else {
-    set_to_true(closure->registers[instruction_a]);
+    moon_set_to_true(closure->registers[instruction_a]);
   }
 
   if (bufb_ref.is_copy == TRUE) moon_delete_value((moon_value *) bufb_ref.value_addr);
@@ -1006,7 +1006,7 @@ static void op_call(moon_instruction * instruction, moon_closure * closure) {
 
     // @TODO : delete registers managing upvalues
     // delete_registers(sub_closure);
-    set_to_nil(&(sub_closure->result));
+    moon_set_to_nil(&(sub_closure->result));
   }
 
   if (bufa_ref.is_copy == TRUE) moon_delete_value((moon_value *) bufa_ref.value_addr);
@@ -1148,7 +1148,7 @@ static void run_instruction(moon_instruction * instruction, moon_closure * closu
   closure->pc++;
 }
 
-static void add_global(const char * key_str, moon_reference * value_reference) {
+void moon_add_global(const char * key_str, moon_reference * value_reference) {
   moon_reference key_reference = {.is_progmem = FALSE, .is_copy = FALSE, .value_addr = NULL};
 
   moon_create_string_value(&key_reference, key_str);
@@ -1159,7 +1159,7 @@ void moon_add_global_api_func(const char * key_str, void (*api_func)(moon_closur
   moon_reference reference;
 
   create_api_value(&reference, api_func);
-  add_global(key_str, &reference);
+  moon_add_global(key_str, &reference);
 }
 
 void moon_init() {
