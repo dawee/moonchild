@@ -229,6 +229,7 @@ const moon_value MOON_FALSE_VALUE PROGMEM = {.type = LUA_FALSE, .nodes = 1};
 void moon_init();
 void moon_run_generated();
 void moon_arch_run(PGMEM_ADDRESS prototype_addr);
+void moon_arch_update();
 void moon_run(PGMEM_ADDRESS prototype_addr, char * result);
 void moon_run_closure(moon_closure * closure, moon_closure * parent = NULL);
 moon_closure * moon_create_closure(PGMEM_ADDRESS prototype_addr, uint16_t prototype_addr_cursor = 0, moon_closure * parent = NULL);

@@ -4,6 +4,10 @@
 #include "Arduboy.h"
 
 static Arduboy arduboy;
+static BOOL has_update;
+static moon_reference update_reference;
+static moon_closure * closure;
+
 
 void arduboy_print(moon_closure * closure, BOOL has_params) {
   moon_reference buf_ref;
@@ -21,29 +25,27 @@ void arduboy_print(moon_closure * closure, BOOL has_params) {
 void moon_arch_run(PGMEM_ADDRESS prototype_addr) {
   arduboy.begin();
   arduboy.setFrameRate(15);
-  BOOL has_update;
 
   moon_add_global_api_func("arduboy_print", &arduboy_print);
 
   moon_reference key_reference;
-  moon_reference update_reference;
-  moon_closure * closure = moon_create_closure(prototype_addr);
+  closure = moon_create_closure(prototype_addr);
 
   moon_create_string_value(&key_reference, "update");
   moon_run_closure(closure);
   has_update = moon_find_closure_value(&update_reference, closure, &key_reference);
+}
 
-  while(1) {
-    if (!(arduboy.nextFrame())) continue;
+void moon_arch_update() {
+  if (!(arduboy.nextFrame())) return;
+  
+  arduboy.clear();
 
-    arduboy.clear();
-
-    if (has_update == TRUE && MOON_AS_VALUE(&update_reference)->type == LUA_CLOSURE) {
-      moon_run_closure(MOON_AS_CLOSURE(&update_reference));
-    }
-
-    arduboy.display();    
+  if (has_update == TRUE && MOON_AS_VALUE(&update_reference)->type == LUA_CLOSURE) {
+    moon_run_closure(MOON_AS_CLOSURE(&update_reference));
   }
+
+  arduboy.display();
 }
 
 #endif
