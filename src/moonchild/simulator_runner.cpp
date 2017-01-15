@@ -45,7 +45,7 @@ void moon_arch_run(PGMEM_ADDRESS prototype_addr) {
 
 void moon_arch_update() {
   if (has_update == TRUE && MOON_AS_VALUE(&update_reference)->type == LUA_CLOSURE) {
-    moon_run_closure(MOON_AS_CLOSURE(&update_reference));
+    moon_run_closure(MOON_AS_CLOSURE(&update_reference), closure);
   }
 }
 
