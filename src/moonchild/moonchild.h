@@ -3,6 +3,8 @@
 
 #include <stdint.h>
 #include <stdio.h>
+#include <avr/pgmspace.h>
+
 
 #define MOON_MAX_REGISTERS 20
 #define MOON_MAX_UPVALUES 20
@@ -12,6 +14,7 @@
 
 typedef void * SRAM_ADDRESS;
 
+
 #ifndef BOOL
   typedef uint8_t BOOL;
 
@@ -19,18 +22,12 @@ typedef void * SRAM_ADDRESS;
 #endif
 
 
-#ifndef MOONCHILD_SIMULATOR
-  #include <avr/pgmspace.h>
-  typedef uint16_t PGMEM_ADDRESS;
-  #define progmem_read(X, Y) pgm_read_byte_near(X + Y)
+
+#ifndef MOONCHILD_DEBUG
   #define moon_debug(...)
 #else
-  #define PROGMEM
   #define moon_debug(...) printf(__VA_ARGS__)
-  typedef void * PGMEM_ADDRESS;
-  char progmem_read(PGMEM_ADDRESS mem_addr, uint16_t offset);
 #endif
-
 
 enum MOON_OPCODES {
   OPCODE_MOVE,
@@ -170,13 +167,13 @@ typedef struct {
   uint8_t is_varargs;
   uint8_t max_stack_size;
   uint16_t instructions_count;
-  PGMEM_ADDRESS instructions_addr;
+  PGM_VOID_P instructions_addr;
   uint16_t constants_count;
-  PGMEM_ADDRESS constants_addr;
+  PGM_VOID_P constants_addr;
   uint16_t prototypes_count;
-  PGMEM_ADDRESS prototypes_addr;
+  PGM_VOID_P prototypes_addr;
   uint16_t upvalues_count;
-  PGMEM_ADDRESS upvalues_addr;
+  PGM_VOID_P upvalues_addr;
 } moon_prototype;
 
 typedef struct moon_closure_t {
@@ -186,7 +183,7 @@ typedef struct moon_closure_t {
   uint16_t base;
   uint16_t pc;
   moon_hash in_upvalues;
-  PGMEM_ADDRESS prototype_addr;
+  PGM_VOID_P prototype_addr;
   uint16_t prototype_addr_cursor;
   moon_reference * registers[MOON_MAX_REGISTERS];
   moon_reference * upvalues[MOON_MAX_UPVALUES];
@@ -228,11 +225,11 @@ const moon_value MOON_FALSE_VALUE PROGMEM = {.type = LUA_FALSE, .nodes = 1};
 
 void moon_init();
 void moon_run_generated();
-void moon_arch_run(PGMEM_ADDRESS prototype_addr);
+void moon_arch_run(PGM_VOID_P prototype_addr);
 void moon_arch_update();
-void moon_run(PGMEM_ADDRESS prototype_addr, char * result);
+void moon_run(PGM_VOID_P prototype_addr, char * result);
 void moon_run_closure(moon_closure * closure, moon_closure * parent = NULL);
-moon_closure * moon_create_closure(PGMEM_ADDRESS prototype_addr, uint16_t prototype_addr_cursor = 0, moon_closure * parent = NULL);
+moon_closure * moon_create_closure(PGM_VOID_P prototype_addr, uint16_t prototype_addr_cursor = 0, moon_closure * parent = NULL);
 void moon_create_string_value(moon_reference * reference, const char * str);
 BOOL moon_find_closure_value(moon_reference * result, moon_closure * closure, moon_reference * key_reference);
 void moon_add_global_api_func(const char * key_str, void (*api_func)(moon_closure *, BOOL));

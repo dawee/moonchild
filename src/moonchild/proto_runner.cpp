@@ -1,12 +1,16 @@
-#ifndef MOONCHILD_SIMULATOR
-
-#include "moonchild.h"
 #include "Arduboy.h"
+#include "moonchild.h"
+
 
 static Arduboy arduboy;
+
+
+
+
 static BOOL has_update;
 static moon_reference update_reference;
 static moon_closure * closure;
+
 
 
 void arduboy_print(moon_closure * closure, BOOL has_params) {
@@ -28,10 +32,8 @@ void arduboy_print(moon_closure * closure, BOOL has_params) {
   if (buf3_ref.is_copy == TRUE) moon_delete_value((moon_value *) buf3_ref.value_addr);  
 }
 
-void moon_arch_run(PGMEM_ADDRESS prototype_addr) {
-  arduboy.begin();
-  arduboy.setFrameRate(15);
 
+void moon_arch_run(PGM_VOID_P prototype_addr) {
   moon_add_global_api_func("arduboy_print", &arduboy_print);
 
   moon_reference key_reference;
@@ -54,4 +56,17 @@ void moon_arch_update() {
   arduboy.display();
 }
 
+
+#ifdef MOONCHILD_SIMULATOR
+int main() {
+  moon_init();
+  moon_run_generated();
+  moon_arch_update();
+  moon_arch_update();
+  moon_arch_update();
+  moon_arch_update();
+  moon_arch_update();
+  return 0;
+}
 #endif
+

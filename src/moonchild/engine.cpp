@@ -6,11 +6,11 @@
 static moon_hash globals_hash;
 
 
-static void progmem_cpy(void * dest, PGMEM_ADDRESS src, uint16_t size, uint16_t offset = 0) {
+static void progmem_cpy(void * dest, PGM_VOID_P src, uint16_t size, uint16_t offset = 0) {
   char * cdest = (char *)dest;
 
   for (uint16_t index = 0; index < size; ++index) {
-    cdest[index] = progmem_read(src, index + offset);
+    cdest[index] = pgm_read_byte_near((PGM_VOID_P)(((intptr_t) src) + offset + index));
   }
 }
 
@@ -71,9 +71,12 @@ static void create_api_value(moon_reference * reference, void (*api_func)(moon_c
 
 static void init_registers(moon_closure * closure);
 static void init_upvalues(moon_closure * closure);
+static void create_registers(moon_closure * closure);
+static void create_upvalues(moon_closure * closure, moon_closure * parent);
+
 static void init_hash(moon_hash * hash);
 
-moon_closure * moon_create_closure(PGMEM_ADDRESS prototype_addr, uint16_t prototype_addr_cursor, moon_closure * parent) {
+moon_closure * moon_create_closure(PGM_VOID_P prototype_addr, uint16_t prototype_addr_cursor, moon_closure * parent) {
   moon_closure * closure = (moon_closure *) malloc(sizeof(moon_closure));
 
   closure->type = LUA_CLOSURE;
@@ -84,6 +87,8 @@ moon_closure * moon_create_closure(PGMEM_ADDRESS prototype_addr, uint16_t protot
   init_hash(&(closure->in_upvalues));
   init_registers(closure);
   init_upvalues(closure);
+  create_registers(closure);
+  if (parent != NULL) create_upvalues(closure, parent);
   moon_set_to_nil(&(closure->result));
 
   return closure;
@@ -105,7 +110,7 @@ void moon_delete_value(moon_value * value) {
 }
 
 static void create_progmem_value_copy(moon_reference * dest, moon_reference * src) {
-  uint8_t type = progmem_read(src->value_addr, 0);
+  uint8_t type = pgm_read_byte_near(src->value_addr);
   moon_string_value string_value;
 
   switch(type) {
@@ -441,7 +446,7 @@ static void delete_registers(moon_closure * closure) {
   }
 }
 
-static void init_prototype(moon_prototype * prototype, PGMEM_ADDRESS prototype_addr) {
+static void init_prototype(moon_prototype * prototype, PGM_VOID_P prototype_addr) {
   progmem_cpy(prototype, prototype_addr, sizeof(moon_prototype));
 }
 
@@ -666,8 +671,6 @@ void moon_run_closure(moon_closure * closure, moon_closure * parent) {
   moon_instruction instruction;
 
   read_closure_prototype(&prototype, closure);
-  create_registers(closure);
-  if (parent != NULL) create_upvalues(closure, parent);
 
   closure->pc = 0;
 
@@ -960,9 +963,9 @@ static void op_gettabup(moon_instruction * instruction, moon_closure * closure) 
 
 static void op_setupval(moon_instruction * instruction, moon_closure * closure) {
   uint8_t instruction_a = MOON_READ_A(instruction);
-  uint16_t instruction_b = MOON_READ_B(instruction);
+  uint8_t instruction_b = MOON_READ_B(instruction);
 
-  copy_reference(closure->upvalues[instruction_a], closure->registers[instruction_b]);
+  copy_reference(closure->upvalues[instruction_b], closure->registers[instruction_a]);
 }
 
 static void op_getupval(moon_instruction * instruction, moon_closure * closure) {
@@ -1166,7 +1169,7 @@ void moon_init() {
   init_hash(&globals_hash);
 }
 
-void moon_run(PGMEM_ADDRESS prototype_addr, char * result) {
+void moon_run(PGM_VOID_P prototype_addr, char * result) {
   moon_closure * closure = moon_create_closure(prototype_addr);
 
   moon_run_closure(closure);
