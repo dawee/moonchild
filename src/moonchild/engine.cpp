@@ -71,6 +71,9 @@ static void create_api_value(moon_reference * reference, void (*api_func)(moon_c
 
 static void init_registers(moon_closure * closure);
 static void init_upvalues(moon_closure * closure);
+static void create_registers(moon_closure * closure);
+static void create_upvalues(moon_closure * closure, moon_closure * parent);
+
 static void init_hash(moon_hash * hash);
 
 moon_closure * moon_create_closure(PGMEM_ADDRESS prototype_addr, uint16_t prototype_addr_cursor, moon_closure * parent) {
@@ -84,6 +87,8 @@ moon_closure * moon_create_closure(PGMEM_ADDRESS prototype_addr, uint16_t protot
   init_hash(&(closure->in_upvalues));
   init_registers(closure);
   init_upvalues(closure);
+  create_registers(closure);
+  if (parent != NULL) create_upvalues(closure, parent);
   moon_set_to_nil(&(closure->result));
 
   return closure;
@@ -666,8 +671,6 @@ void moon_run_closure(moon_closure * closure, moon_closure * parent) {
   moon_instruction instruction;
 
   read_closure_prototype(&prototype, closure);
-  create_registers(closure);
-  if (parent != NULL) create_upvalues(closure, parent);
 
   closure->pc = 0;
 
@@ -960,9 +963,9 @@ static void op_gettabup(moon_instruction * instruction, moon_closure * closure) 
 
 static void op_setupval(moon_instruction * instruction, moon_closure * closure) {
   uint8_t instruction_a = MOON_READ_A(instruction);
-  uint16_t instruction_b = MOON_READ_B(instruction);
+  uint8_t instruction_b = MOON_READ_B(instruction);
 
-  copy_reference(closure->upvalues[instruction_a], closure->registers[instruction_b]);
+  copy_reference(closure->upvalues[instruction_b], closure->registers[instruction_a]);
 }
 
 static void op_getupval(moon_instruction * instruction, moon_closure * closure) {
