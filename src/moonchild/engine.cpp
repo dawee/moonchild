@@ -6,11 +6,11 @@
 static moon_hash globals_hash;
 
 
-static void progmem_cpy(void * dest, PGMEM_ADDRESS src, uint16_t size, uint16_t offset = 0) {
+static void progmem_cpy(void * dest, PGM_VOID_P src, uint16_t size, uint16_t offset = 0) {
   char * cdest = (char *)dest;
 
   for (uint16_t index = 0; index < size; ++index) {
-    cdest[index] = progmem_read(src, index + offset);
+    cdest[index] = pgm_read_byte_near((PGM_VOID_P)(((intptr_t) src) + offset + index));
   }
 }
 
@@ -76,7 +76,7 @@ static void create_upvalues(moon_closure * closure, moon_closure * parent);
 
 static void init_hash(moon_hash * hash);
 
-moon_closure * moon_create_closure(PGMEM_ADDRESS prototype_addr, uint16_t prototype_addr_cursor, moon_closure * parent) {
+moon_closure * moon_create_closure(PGM_VOID_P prototype_addr, uint16_t prototype_addr_cursor, moon_closure * parent) {
   moon_closure * closure = (moon_closure *) malloc(sizeof(moon_closure));
 
   closure->type = LUA_CLOSURE;
@@ -110,7 +110,7 @@ void moon_delete_value(moon_value * value) {
 }
 
 static void create_progmem_value_copy(moon_reference * dest, moon_reference * src) {
-  uint8_t type = progmem_read(src->value_addr, 0);
+  uint8_t type = pgm_read_byte_near(src->value_addr);
   moon_string_value string_value;
 
   switch(type) {
@@ -446,7 +446,7 @@ static void delete_registers(moon_closure * closure) {
   }
 }
 
-static void init_prototype(moon_prototype * prototype, PGMEM_ADDRESS prototype_addr) {
+static void init_prototype(moon_prototype * prototype, PGM_VOID_P prototype_addr) {
   progmem_cpy(prototype, prototype_addr, sizeof(moon_prototype));
 }
 
@@ -1169,7 +1169,7 @@ void moon_init() {
   init_hash(&globals_hash);
 }
 
-void moon_run(PGMEM_ADDRESS prototype_addr, char * result) {
+void moon_run(PGM_VOID_P prototype_addr, char * result) {
   moon_closure * closure = moon_create_closure(prototype_addr);
 
   moon_run_closure(closure);

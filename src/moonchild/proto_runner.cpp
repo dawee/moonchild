@@ -15,13 +15,6 @@ static moon_closure * closure;
 
 #ifdef MOONCHILD_SIMULATOR
 
-char progmem_read(PGMEM_ADDRESS mem_addr, uint16_t offset) {
-  char * bytes = (char *) mem_addr;
-
-  return bytes[offset];
-}
-
-
 void arduboy_print(moon_closure * closure, BOOL has_params) {
   moon_reference buf1_ref;
   moon_reference buf2_ref;
@@ -66,7 +59,7 @@ void arduboy_print(moon_closure * closure, BOOL has_params) {
 
 
 
-void moon_arch_run(PGMEM_ADDRESS prototype_addr) {
+void moon_arch_run(PGM_VOID_P prototype_addr) {
   moon_add_global_api_func("arduboy_print", &arduboy_print);
 
   moon_reference key_reference;

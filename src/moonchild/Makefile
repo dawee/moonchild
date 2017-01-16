@@ -1,6 +1,6 @@
 sources := $(shell find . -name "*.cpp")
 objects := $(subst .cpp,.o,${sources})
-cflags := -DMOONCHILD_SIMULATOR
+cflags := -DMOONCHILD_SIMULATOR -DMOONCHILD_DEBUG -I./sim
 
 simulator: ${objects}
 	@gcc ${cflags} -o simulator ${objects}
