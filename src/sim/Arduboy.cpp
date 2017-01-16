@@ -27,3 +27,7 @@ void Arduboy::begin() {
 void Arduboy::setFrameRate(int rate) {
   printf("%s\n", "arduboy.setFrameRate");
 }
+
+bool Arduboy::pressed(int key) {
+  return false;
+}

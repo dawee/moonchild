@@ -3,6 +3,8 @@
 
 #define F(x) x
 
+#define RIGHT_BUTTON 0
+
 class Arduboy {
 
 public:
@@ -15,6 +17,7 @@ public:
   void display();
   void begin();
   void setFrameRate(int rate);
+  bool pressed(int key);
 
 };
 
