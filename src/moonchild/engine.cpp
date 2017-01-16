@@ -186,26 +186,32 @@ void moon_ref_to_cstr(char * result, moon_reference * reference) {
 
   switch(((moon_value *) buf_ref.value_addr)->type) {
     case LUA_NIL:
-      sprintf(result, "\nnil\n");
+      sprintf(result, "nil");
       break;
     case LUA_FALSE:
-      sprintf(result, "\nfalse\n");
+      sprintf(result, "false");
       break;
     case LUA_TRUE:
-      sprintf(result, "\ntrue\n");
+      sprintf(result, "true");
       break;
     case LUA_INT:
-      sprintf(result, "\n%d\n", ((moon_int_value *) buf_ref.value_addr)->val);
+      sprintf(result, "%d", ((moon_int_value *) buf_ref.value_addr)->val);
       break;
     case LUA_NUMBER:
-      sprintf(result, "\n~%d\n", (int)((moon_number_value *) buf_ref.value_addr)->val);
+      sprintf(result, "~%d", (int)((moon_number_value *) buf_ref.value_addr)->val);
       break;
     case LUA_STRING:
-      sprintf(result, "\n%s\n", (char *)(((moon_string_value *) buf_ref.value_addr)->string_addr));
+      sprintf(result, "%s", (char *)(((moon_string_value *) buf_ref.value_addr)->string_addr));
+      break;
+    case LUA_CLOSURE:
+      sprintf(result, "<closure>");
+      break;
+    case LUA_API:
+      sprintf(result, "<native>");
       break;
 
     default:
-      sprintf(result, "\nother type : %d\n", ((moon_value *) buf_ref.value_addr)->type);
+      sprintf(result, "other type : %d", ((moon_value *) buf_ref.value_addr)->type);
       break;
   };
 
@@ -350,20 +356,22 @@ static BOOL find_hash_value(moon_reference * result, moon_hash * hash, moon_refe
   for (uint16_t index = 0; index < hash->count; ++index) {
     key_as_val = (moon_string_value *) (pair->key_reference).value_addr;
     key_str = (char *) key_as_val->string_addr;
-    found = TRUE;
+    found = FALSE;
 
-    if (key_as_val->length != input_key_as_val->length) continue;
+    if (key_as_val->length == input_key_as_val->length) {
+      found = TRUE;
 
-    for (uint16_t car_index = 0; car_index < input_key_as_val->length; ++car_index) {
-      if (key_str[car_index] != input_key_str[car_index]) {
-        found = FALSE;
+      for (uint16_t car_index = 0; car_index < input_key_as_val->length; ++car_index) {
+        if (key_str[car_index] != input_key_str[car_index]) {
+          found = FALSE;
+          break;
+        }
+      }
+
+      if (found == TRUE) {
+        copy_reference(result, &(pair->value_reference));
         break;
       }
-    }
-
-    if (found == TRUE) {
-      copy_reference(result, &(pair->value_reference));
-      break;
     }
 
     pair = pair->next;
