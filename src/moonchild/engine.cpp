@@ -737,7 +737,7 @@ static void op_add(moon_instruction * instruction, moon_closure * closure) {
 
   create_op_bufs(&bufb_ref, &bufc_ref, instruction, closure);
   create_op_add_result(closure->registers[instruction_a], (moon_value *) bufb_ref.value_addr, (moon_value *) bufc_ref.value_addr);
-  
+
   closure->registers[instruction_a]->is_progmem = FALSE;
 
   if (old_value_is_progmem == FALSE) {

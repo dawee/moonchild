@@ -20,3 +20,10 @@ void Arduboy::clear(){}
 
 void Arduboy::display(){}
 
+void Arduboy::begin() {
+  printf("%s\n", "arduboy.begin");
+}
+
+void Arduboy::setFrameRate(int rate) {
+  printf("%s\n", "arduboy.setFrameRate");
+}

@@ -20,7 +20,7 @@ if (!filename) {
 
 if (!fs.existsSync(filename)) {
   console.error(`"${filename}"" does not exist`);
-  process.exit(1);  
+  process.exit(1);
 }
 
 

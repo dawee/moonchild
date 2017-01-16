@@ -13,6 +13,8 @@ public:
   bool nextFrame();
   void clear();
   void display();
+  void begin();
+  void setFrameRate(int rate);
 
 };
 
