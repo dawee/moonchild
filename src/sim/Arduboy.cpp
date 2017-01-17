@@ -29,5 +29,5 @@ void Arduboy::setFrameRate(int rate) {
 }
 
 bool Arduboy::pressed(int key) {
-  return false;
+  return true;
 }

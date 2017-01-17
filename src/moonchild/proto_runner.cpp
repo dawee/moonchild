@@ -37,6 +37,14 @@ void moon_arch_run(PGM_VOID_P prototype_addr) {
 void moon_arch_update() {
   if (!(arduboy.nextFrame())) return;
 
+  if (arduboy.pressed(RIGHT_BUTTON)) {
+    moon_set_to_true(&right_pressed_reference);
+  } else {
+    moon_set_to_false(&right_pressed_reference);
+  }
+
+  moon_add_global("arduboy_right_pressed", &right_pressed_reference);
+
   arduboy.clear();
 
   if (has_update == TRUE && MOON_AS_VALUE(&update_reference)->type == LUA_CLOSURE) {
