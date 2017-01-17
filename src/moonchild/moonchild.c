@@ -323,6 +323,7 @@ static void init_hash(moon_hash * hash) {
 }
 
 static BOOL find_hash_value(moon_reference * result, moon_hash * hash, moon_reference * key_reference) {
+  uint16_t index = 0;
   BOOL found = FALSE;
   moon_reference buf_key_ref;
   moon_hash_pair * pair = hash->first;
@@ -330,7 +331,7 @@ static BOOL find_hash_value(moon_reference * result, moon_hash * hash, moon_refe
   moon_set_to_nil(result);
   moon_create_value_copy(&buf_key_ref, key_reference);
 
-  for (uint16_t index = 0; index < hash->count; ++index) {
+  for (index = 0; index < hash->count; ++index) {
     found = equals(&(pair->key_reference), &buf_key_ref);
 
     if (found == TRUE) {
@@ -347,6 +348,7 @@ static BOOL find_hash_value(moon_reference * result, moon_hash * hash, moon_refe
 }
 
 static void set_hash_pair(moon_hash * hash, moon_reference * key_reference, moon_reference * value_reference) {
+  uint16_t index = 0;
   moon_hash_pair * new_pair = (moon_hash_pair *) malloc(sizeof(moon_hash_pair));
   moon_hash_pair * pair = NULL;
   moon_hash_pair * previous = NULL;
@@ -362,14 +364,14 @@ static void set_hash_pair(moon_hash * hash, moon_reference * key_reference, moon
     previous = NULL;
     pair = hash->first;
 
-    for (uint16_t index = 0; index < hash->count; ++index) {
+    for (index = 0; index < hash->count; ++index) {
       if (equals(&(pair->key_reference), &(new_pair->key_reference)) == TRUE) break;
 
       previous = pair;
       pair = pair->next;
     }
 
-    if (pair == NULL) {
+    if (index == hash->count) {
       hash->last->next = new_pair;
       hash->last = new_pair;
       new_pair->next = NULL;
