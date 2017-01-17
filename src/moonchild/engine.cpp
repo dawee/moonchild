@@ -322,64 +322,71 @@ static void init_hash(moon_hash * hash) {
   hash->count = 0;
 }
 
-static void set_hash_pair(moon_hash * hash, moon_reference * key_reference, moon_reference * value_reference) {
-  moon_hash_pair * pair = (moon_hash_pair *) malloc(sizeof(moon_hash_pair));
-
-  moon_create_value_copy(&(pair->key_reference), key_reference);
-  copy_reference(&(pair->value_reference), value_reference);
-
-  if (hash->count == 0) {
-    hash->first = pair;
-  } else {
-    hash->last->next = pair;
-  }
-
-  hash->last = pair;
-  hash->count++;
-}
-
 static BOOL find_hash_value(moon_reference * result, moon_hash * hash, moon_reference * key_reference) {
   BOOL found = FALSE;
-  char * key_str;
-  char * input_key_str;
-  moon_string_value * key_as_val;
-  moon_reference buf_ref;
+  moon_reference buf_key_ref;
   moon_hash_pair * pair = hash->first;
-  moon_string_value * input_key_as_val;
 
   moon_set_to_nil(result);
-  moon_create_value_copy(&buf_ref, key_reference);
-
-  input_key_as_val = (moon_string_value *) buf_ref.value_addr;
-  input_key_str = (char *) input_key_as_val->string_addr;
+  moon_create_value_copy(&buf_key_ref, key_reference);
 
   for (uint16_t index = 0; index < hash->count; ++index) {
-    key_as_val = (moon_string_value *) (pair->key_reference).value_addr;
-    key_str = (char *) key_as_val->string_addr;
-    found = FALSE;
+    found = equals(&(pair->key_reference), &buf_key_ref);
 
-    if (key_as_val->length == input_key_as_val->length) {
-      found = TRUE;
-
-      for (uint16_t car_index = 0; car_index < input_key_as_val->length; ++car_index) {
-        if (key_str[car_index] != input_key_str[car_index]) {
-          found = FALSE;
-          break;
-        }
-      }
-
-      if (found == TRUE) {
-        copy_reference(result, &(pair->value_reference));
-        break;
-      }
+    if (found == TRUE) {
+      copy_reference(result, &(pair->value_reference));
+      break;
     }
 
     pair = pair->next;
   }
 
-  if (buf_ref.is_copy == TRUE) moon_delete_value((moon_value *) buf_ref.value_addr);
+  if (buf_key_ref.is_copy == TRUE) moon_delete_value((moon_value *) buf_key_ref.value_addr);
 
   return found;
+}
+
+static void set_hash_pair(moon_hash * hash, moon_reference * key_reference, moon_reference * value_reference) {
+  moon_hash_pair * new_pair = (moon_hash_pair *) malloc(sizeof(moon_hash_pair));
+  moon_hash_pair * pair = NULL;
+  moon_hash_pair * previous = NULL;
+
+  moon_create_value_copy(&(new_pair->key_reference), key_reference);
+  copy_reference(&(new_pair->value_reference), value_reference);
+
+  if (hash->count == 0) {
+    hash->first = new_pair;
+    hash->last = new_pair;
+    hash->count = 1;
+  } else {
+    previous = NULL;
+    pair = hash->first;
+
+    for (uint16_t index = 0; index < hash->count; ++index) {
+      if (equals(&(pair->key_reference), &(new_pair->key_reference)) == TRUE) break;
+
+      previous = pair;
+
+      if (index == hash->count - 1) {
+        pair = NULL;
+      } else {
+        pair = pair->next;
+      }
+    }
+
+    if (pair == NULL) {
+      hash->last->next = new_pair;
+      hash->last = new_pair;
+      hash->count++;
+    } else {
+      moon_delete_value(MOON_AS_VALUE(&(pair->key_reference)));
+      new_pair->next = pair->next;
+
+      if (previous != NULL) previous->next = new_pair;
+      if (hash->first == pair) hash->first = new_pair;
+      if (hash->last == pair) hash->last = new_pair;
+    }
+  }
 }
 
 BOOL moon_find_closure_value(moon_reference * result, moon_closure * closure, moon_reference * key_reference) {
