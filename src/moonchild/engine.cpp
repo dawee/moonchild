@@ -366,17 +366,13 @@ static void set_hash_pair(moon_hash * hash, moon_reference * key_reference, moon
       if (equals(&(pair->key_reference), &(new_pair->key_reference)) == TRUE) break;
 
       previous = pair;
-
-      if (index == hash->count - 1) {
-        pair = NULL;
-      } else {
-        pair = pair->next;
-      }
+      pair = pair->next;
     }
 
     if (pair == NULL) {
       hash->last->next = new_pair;
       hash->last = new_pair;
+      new_pair->next = NULL;
       hash->count++;
     } else {
       moon_delete_value(MOON_AS_VALUE(&(pair->key_reference)));
