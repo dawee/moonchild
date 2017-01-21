@@ -202,6 +202,14 @@ const moon_value MOON_TRUE_VALUE PROGMEM = {.type = LUA_TRUE, .nodes = 1};
 const moon_value MOON_FALSE_VALUE PROGMEM = {.type = LUA_FALSE, .nodes = 1};
 
 /*
+ * PROGMEM definitions
+ */
+
+#define MOON_PROGMEM_DEFINITION(type, name) static const type name PROGMEM
+#define MOON_PROGMEM_ARRAY_DEFINITION(type, name) static const type name[] PROGMEM
+#define MOON_PROGMEM_ACCESSOR(name)
+
+/*
  * Types Macros
  */
 
