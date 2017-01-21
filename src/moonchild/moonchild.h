@@ -197,9 +197,9 @@ typedef struct {
 } moon_api_value;
 
 
-const moon_value MOON_NIL_VALUE PROGMEM = {.type = LUA_NIL, .nodes = 1};
-const moon_value MOON_TRUE_VALUE PROGMEM = {.type = LUA_TRUE, .nodes = 1};
-const moon_value MOON_FALSE_VALUE PROGMEM = {.type = LUA_FALSE, .nodes = 1};
+const moon_value MOON_NIL_VALUE PROGMEM;
+const moon_value MOON_TRUE_VALUE PROGMEM;
+const moon_value MOON_FALSE_VALUE PROGMEM;
 
 /*
  * PROGMEM definitions
@@ -232,12 +232,8 @@ const moon_value MOON_FALSE_VALUE PROGMEM = {.type = LUA_FALSE, .nodes = 1};
 #define MOON_AS_API(ref) ((moon_api_value *)((ref)->value_addr))
 
 void moon_init();
-void moon_run_generated();
-void moon_arch_run(PGM_VOID_P prototype_addr);
-void moon_arch_update();
-void moon_run(PGM_VOID_P prototype_addr, char * result);
-void moon_run_closure(moon_closure * closure, moon_closure * parent = NULL);
-moon_closure * moon_create_closure(PGM_VOID_P prototype_addr, uint16_t prototype_addr_cursor = 0, moon_closure * parent = NULL);
+void moon_run_closure(moon_closure * closure, moon_closure * parent);
+moon_closure * moon_create_closure(PGM_VOID_P prototype_addr, uint16_t prototype_addr_cursor, moon_closure * parent);
 void moon_create_string_value(moon_reference * reference, const char * str);
 BOOL moon_find_closure_value(moon_reference * result, moon_closure * closure, moon_reference * key_reference);
 void moon_add_global_api_func(const char * key_str, void (*api_func)(moon_closure *, BOOL));

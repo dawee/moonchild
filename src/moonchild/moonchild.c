@@ -6,8 +6,11 @@
 
 static moon_hash globals_hash;
 
+const moon_value MOON_NIL_VALUE PROGMEM = {.type = LUA_NIL, .nodes = 1};
+const moon_value MOON_TRUE_VALUE PROGMEM = {.type = LUA_TRUE, .nodes = 1};
+const moon_value MOON_FALSE_VALUE PROGMEM = {.type = LUA_FALSE, .nodes = 1};
 
-static void progmem_cpy(void * dest, PGM_VOID_P src, uint16_t size, uint16_t offset = 0) {
+static void progmem_cpy(void * dest, PGM_VOID_P src, uint16_t size, uint16_t offset) {
   char * cdest = (char *)dest;
 
   for (uint16_t index = 0; index < size; ++index) {
@@ -119,21 +122,21 @@ static void create_progmem_value_copy(moon_reference * dest, moon_reference * sr
     case LUA_TRUE:
     case LUA_FALSE:
       dest->value_addr = (SRAM_ADDRESS) moon_malloc("create_progmem_value_copy (NIL/TRUE/FALSE)", sizeof(moon_value));
-      progmem_cpy(dest->value_addr, src->value_addr, sizeof(moon_value));
+      progmem_cpy(dest->value_addr, src->value_addr, sizeof(moon_value), 0);
       dest->is_copy = TRUE;
       dest->is_progmem = FALSE;
       break;
 
     case LUA_INT:
       dest->value_addr = (SRAM_ADDRESS) moon_malloc("create_progmem_value_copy, (INT)", sizeof(moon_int_value));
-      progmem_cpy(dest->value_addr, src->value_addr, sizeof(moon_int_value));
+      progmem_cpy(dest->value_addr, src->value_addr, sizeof(moon_int_value), 0);
       dest->is_copy = TRUE;
       dest->is_progmem = FALSE;
       break;
 
     case LUA_NUMBER:
       dest->value_addr = (SRAM_ADDRESS) moon_malloc("create_progmem_value_copy NUMBER", sizeof(moon_number_value));
-      progmem_cpy(dest->value_addr, src->value_addr, sizeof(moon_number_value));
+      progmem_cpy(dest->value_addr, src->value_addr, sizeof(moon_number_value), 0);
       dest->is_copy = TRUE;
       dest->is_progmem = FALSE;
       break;
@@ -142,12 +145,12 @@ static void create_progmem_value_copy(moon_reference * dest, moon_reference * sr
       dest->value_addr = (SRAM_ADDRESS) moon_malloc("create_progmem_value_copy STRING", sizeof(moon_string_value));
       dest->is_progmem = FALSE;
 
-      progmem_cpy(&string_value, src->value_addr, sizeof(moon_string_value));
-      progmem_cpy(dest->value_addr, src->value_addr, sizeof(moon_string_value));
+      progmem_cpy(&string_value, src->value_addr, sizeof(moon_string_value), 0);
+      progmem_cpy(dest->value_addr, src->value_addr, sizeof(moon_string_value), 0);
 
       ((moon_string_value *) dest->value_addr)->string_addr = (SRAM_ADDRESS) moon_malloc("create_progmem_value_copy CSTRING", ((moon_string_value *) dest->value_addr)->length + 1);
 
-      progmem_cpy(((moon_string_value *) dest->value_addr)->string_addr, string_value.string_addr, ((moon_string_value *) dest->value_addr)->length);
+      progmem_cpy(((moon_string_value *) dest->value_addr)->string_addr, string_value.string_addr, ((moon_string_value *) dest->value_addr)->length, 0);
 
       ((char *)(((moon_string_value *) dest->value_addr)->string_addr))[((moon_string_value *) dest->value_addr)->length] = '\0';
 
@@ -156,7 +159,7 @@ static void create_progmem_value_copy(moon_reference * dest, moon_reference * sr
 
     case LUA_API:
       dest->value_addr = (SRAM_ADDRESS) moon_malloc("create_progmem_value_copy API", sizeof(moon_api_value));
-      progmem_cpy(dest->value_addr, src->value_addr, sizeof(moon_api_value));
+      progmem_cpy(dest->value_addr, src->value_addr, sizeof(moon_api_value), 0);
       dest->is_copy = TRUE;
       dest->is_progmem = FALSE;
       break;
@@ -235,7 +238,7 @@ static void read_prototype_upvalue(moon_upvalue * upvalue, moon_prototype * prot
 static BOOL equals_string(moon_reference * ref_a, moon_reference * ref_b) {
   BOOL result = TRUE;
 
-  if (MOON_AS_STRING(ref_a)->length != MOON_AS_STRING(ref_b)->length) return false;
+  if (MOON_AS_STRING(ref_a)->length != MOON_AS_STRING(ref_b)->length) return FALSE;
 
   for (uint16_t index = 0; index < MOON_AS_STRING(ref_a)->length; ++index) {
     if (MOON_AS_CSTRING(ref_a)[index] != MOON_AS_CSTRING(ref_b)[index]) {
@@ -461,7 +464,7 @@ static void delete_registers(moon_closure * closure) {
 }
 
 static void init_prototype(moon_prototype * prototype, PGM_VOID_P prototype_addr) {
-  progmem_cpy(prototype, prototype_addr, sizeof(moon_prototype));
+  progmem_cpy(prototype, prototype_addr, sizeof(moon_prototype), 0);
 }
 
 static BOOL check_arithmetic_values(moon_value * value_a, moon_value * value_b) {
@@ -1181,11 +1184,4 @@ void moon_add_global_api_func(const char * key_str, void (*api_func)(moon_closur
 
 void moon_init() {
   init_hash(&globals_hash);
-}
-
-void moon_run(PGM_VOID_P prototype_addr, char * result) {
-  moon_closure * closure = moon_create_closure(prototype_addr);
-
-  moon_run_closure(closure);
-  moon_ref_to_cstr(result, &(closure->result));
 }
