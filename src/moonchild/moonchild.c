@@ -11,9 +11,10 @@ const moon_value MOON_TRUE_VALUE PROGMEM = {.type = LUA_TRUE, .nodes = 1};
 const moon_value MOON_FALSE_VALUE PROGMEM = {.type = LUA_FALSE, .nodes = 1};
 
 static void progmem_cpy(void * dest, PGM_VOID_P src, uint16_t size, uint16_t offset) {
+  uint16_t index = 0;
   char * cdest = (char *)dest;
 
-  for (uint16_t index = 0; index < size; ++index) {
+  for (index = 0; index < size; ++index) {
     cdest[index] = pgm_read_byte_near((PGM_VOID_P)(((intptr_t) src) + offset + index));
   }
 }
@@ -48,6 +49,7 @@ static void create_number_value(moon_reference * reference, CTYPE_LUA_NUMBER num
 }
 
 void moon_create_string_value(moon_reference * reference, const char * str) {
+  uint16_t index = 0;
   uint16_t length = 0;
 
   while(str[length] != '\0') ++length;
@@ -59,7 +61,7 @@ void moon_create_string_value(moon_reference * reference, const char * str) {
   MOON_AS_STRING(reference)->string_addr = (SRAM_ADDRESS) moon_malloc("moon_create_string_value (cstr)", length + 1);
   MOON_AS_STRING(reference)->length = length;
 
-  for (uint16_t index = 0; index < length; ++index) {
+  for (index = 0; index < length; ++index) {
     MOON_AS_CSTRING(reference)[index] = str[index];
   }
 
@@ -236,11 +238,12 @@ static void read_prototype_upvalue(moon_upvalue * upvalue, moon_prototype * prot
 }
 
 static BOOL equals_string(moon_reference * ref_a, moon_reference * ref_b) {
+  uint16_t index = 0;
   BOOL result = TRUE;
 
   if (MOON_AS_STRING(ref_a)->length != MOON_AS_STRING(ref_b)->length) return FALSE;
 
-  for (uint16_t index = 0; index < MOON_AS_STRING(ref_a)->length; ++index) {
+  for (index = 0; index < MOON_AS_STRING(ref_a)->length; ++index) {
     if (MOON_AS_CSTRING(ref_a)[index] != MOON_AS_CSTRING(ref_b)[index]) {
       result = FALSE;
       break;
@@ -412,34 +415,40 @@ static void create_register(moon_closure * closure, uint16_t index) {
 }
 
 static void init_registers(moon_closure * closure) {
-  for (uint16_t index = 0; index < MOON_MAX_REGISTERS; ++index) {
+  uint16_t index = 0;
+
+  for (index = 0; index < MOON_MAX_REGISTERS; ++index) {
     closure->registers[index] = NULL;
   }
 }
 
 static void init_upvalues(moon_closure * closure) {
-  for (uint16_t index = 0; index < MOON_MAX_UPVALUES; ++index) {
+  uint16_t index = 0;
+
+  for (index = 0; index < MOON_MAX_UPVALUES; ++index) {
     closure->upvalues[index] = NULL;
   }
 }
 
 static void create_registers(moon_closure * closure) {
+  uint16_t index = 0;
   moon_prototype prototype;
 
   read_closure_prototype(&prototype, closure);
 
-  for (uint16_t index = 0; index < prototype.max_stack_size; ++index) {
+  for (index = 0; index < prototype.max_stack_size; ++index) {
     create_register(closure, index);
   }
 }
 
 static void create_upvalues(moon_closure * closure, moon_closure * parent) {
+  uint16_t index = 0;
   moon_prototype prototype;
   moon_upvalue upvalue;
 
   read_closure_prototype(&prototype, closure);
 
-  for (uint16_t index = 0; index < prototype.upvalues_count; ++index) {
+  for (index = 0; index < prototype.upvalues_count; ++index) {
     read_prototype_upvalue(&upvalue, &prototype, index);
 
     if (upvalue.in_stack == 1) {
@@ -451,11 +460,12 @@ static void create_upvalues(moon_closure * closure, moon_closure * parent) {
 }
 
 static void delete_registers(moon_closure * closure) {
+  uint16_t index = 0;
   moon_prototype prototype;
 
   read_closure_prototype(&prototype, closure);
 
-  for (uint16_t index = 0; index < prototype.max_stack_size; ++index) {
+  for (index = 0; index < prototype.max_stack_size; ++index) {
     if (closure->registers[index] != NULL) {
       moon_free("delete_registers", closure->registers[index]);
       closure->registers[index] = NULL;
@@ -698,13 +708,14 @@ void moon_run_closure(moon_closure * closure, moon_closure * parent) {
 }
 
 static void copy_to_params(moon_closure * closure, moon_closure * sub_closure) {
+  uint16_t index = 0;
   moon_prototype prototype;
   moon_prototype sub_prototype;
 
   read_closure_prototype(&prototype, closure);
   read_closure_prototype(&sub_prototype, sub_closure);
 
-  for (uint16_t index = 0; index < (closure->top - closure->base); ++index) {
+  for (index = 0; index < (closure->top - closure->base); ++index) {
     copy_reference(sub_closure->registers[index], closure->registers[closure->base + index]);
   }
 }
