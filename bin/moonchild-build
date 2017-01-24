@@ -24,4 +24,4 @@ if (!fs.existsSync(filename)) {
 }
 
 
-build(filename);
+build(filename).then(() => console.log('done.\nTo deploy run \'make -C build deploy\' '));
