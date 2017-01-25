@@ -6,7 +6,7 @@ clean:
 	@rm -rf $(wildcard test/**/*.run) $(wildcard test/**/build)
 
 test/%.run: test/%.c
-	@./bin/moonchild build -s $(join $(dir $@), fixture.lua)
+	@./bin/moonchild build -s $(wildcard $(dir $@)/*.lua)
 	@HOST_TARGET=$(abspath $@) \
 	 PROJECT_MAIN=$(abspath $<) \
 	 EXTRAS_FLAGS=-I$(abspath ./deps/greatest) \
