@@ -1,7 +1,6 @@
-tests := $(wildcard test/**/*.c)
+tests := $(patsubst %.c, %.run, $(wildcard test/**/*.c))
 
-test:
-	@echo ${tests}
+test: clean ${tests}
 
 clean:
 	@rm -rf $(wildcard test/**/*.run) $(wildcard test/**/build)
