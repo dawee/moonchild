@@ -7,6 +7,7 @@ TEST should_not_crash(void) {
     moon_closure * closure = create_main_closure();
     moon_run_closure(closure, NULL);
     moon_delete_value((moon_value *) closure);
+    GREATEST_PASS();
 }
 
 SUITE(Empty) {
