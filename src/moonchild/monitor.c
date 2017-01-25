@@ -15,6 +15,10 @@ typedef struct {
 
 static moon_allocation * allocations = NULL;
 
+int moon_monitor_get_total() {
+  return total;
+}
+
 void * moon_malloc(const char * context, size_t size) {
   void * pointer = malloc(size);
   total += size;
