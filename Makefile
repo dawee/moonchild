@@ -9,7 +9,7 @@ test/%.run: test/%.c
 	@./bin/moonchild build -s $(wildcard $(dir $@)/*.lua)
 	@HOST_TARGET=$(abspath $@) \
 	 PROJECT_MAIN=$(abspath $<) \
-	 EXTRAS_FLAGS=-I$(abspath ./deps/greatest) \
+	 EXTRAS_FLAGS="-I$(abspath ./deps/greatest) -I$(abspath ./deps/uthash/src) -DMOONCHILD_MONITOR" \
 	 make -sC $(join $(dir $@), build) host
 	@$@
 

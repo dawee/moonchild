@@ -1,4 +1,4 @@
-#ifdef MOONCHILD_DEBUG
+#ifdef MOONCHILD_MONITOR
 
 #include "monitor.h"
 #include "moonchild.h"

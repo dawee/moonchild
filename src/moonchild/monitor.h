@@ -4,7 +4,7 @@
 #include <stdlib.h>
 
 
-#ifndef MOONCHILD_DEBUG
+#ifndef MOONCHILD_MONITOR
   #define moon_malloc(name, size) malloc(size)
   #define moon_free(name, pointer) free(pointer)
 #else
