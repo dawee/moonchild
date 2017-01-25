@@ -201,13 +201,6 @@ const moon_value MOON_NIL_VALUE PROGMEM;
 const moon_value MOON_TRUE_VALUE PROGMEM;
 const moon_value MOON_FALSE_VALUE PROGMEM;
 
-/*
- * PROGMEM definitions
- */
-
-#define MOON_PROGMEM_DEFINITION(type, name) static const type name PROGMEM
-#define MOON_PROGMEM_ARRAY_DEFINITION(type, name) static const type name[] PROGMEM
-#define MOON_PROGMEM_ACCESSOR(name)
 
 /*
  * Types Macros
