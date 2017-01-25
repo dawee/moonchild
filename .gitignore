@@ -1,9 +1,3 @@
-*.o
-*.elf
-*.hex
-*.out
-*.bin
-
 node_modules
 build
-test/run
+test/**/*.run
