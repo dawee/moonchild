@@ -205,9 +205,6 @@ const moon_value MOON_FALSE_VALUE PROGMEM;
  * Redefinable Macros (monitor, simulator & test stuff)
  */
 
-#define MOON_SRAM_ACCESSOR(addr) (SRAM_ADDRESS) (addr)
-#define MOON_PGM_ACCESSOR(addr) (PGM_VOID_P) (addr)
-
 #ifndef MOON_MALLOC
   #define MOON_MALLOC(name, size) malloc(size)
 #endif
