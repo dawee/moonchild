@@ -201,6 +201,8 @@ const moon_value MOON_NIL_VALUE PROGMEM;
 const moon_value MOON_TRUE_VALUE PROGMEM;
 const moon_value MOON_FALSE_VALUE PROGMEM;
 
+#define MOON_SRAM_ACCESSOR(addr) (SRAM_ADDRESS) (addr)
+#define MOON_PGM_ACCESSOR(addr) (PGM_VOID_P) (addr)
 
 /*
  * Types Macros
