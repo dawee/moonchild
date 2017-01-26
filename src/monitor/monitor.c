@@ -19,7 +19,7 @@ int moon_monitor_get_total() {
   return total;
 }
 
-void * moon_malloc(const char * context, size_t size) {
+void * moon_monitor_malloc(const char * context, size_t size) {
   void * pointer = malloc(size);
   total += size;
 
@@ -35,7 +35,7 @@ void * moon_malloc(const char * context, size_t size) {
   return pointer;
 }
 
-void moon_free(const char * context, void * pointer) {
+void moon_monitor_free(const char * context, void * pointer) {
   moon_allocation * allocation;
   HASH_FIND_PTR(allocations, &pointer, allocation);
 

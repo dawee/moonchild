@@ -1,5 +1,5 @@
-#include "moonchild.h"
 #include "monitor.h"
+#include "moonchild.h"
 
 #include <stdio.h>
 #include <stdlib.h>
@@ -35,14 +35,14 @@ void moon_set_to_false(moon_reference * reference) {
 }
 
 void moon_create_int_value(moon_reference * reference, CTYPE_LUA_INT int_val) {
-  reference->value_addr = (SRAM_ADDRESS) moon_malloc("moon_create_int_value", sizeof(moon_int_value));
+  reference->value_addr = (SRAM_ADDRESS) MOON_MALLOC("moon_create_int_value", sizeof(moon_int_value));
   ((moon_int_value *) reference->value_addr)->type = LUA_INT;
   ((moon_int_value *) reference->value_addr)->val = int_val;
   ((moon_int_value *) reference->value_addr)->nodes = 1;
 }
 
 static void create_number_value(moon_reference * reference, CTYPE_LUA_NUMBER number_val) {
-  reference->value_addr = (SRAM_ADDRESS) moon_malloc("create_number_value", sizeof(moon_number_value));
+  reference->value_addr = (SRAM_ADDRESS) MOON_MALLOC("create_number_value", sizeof(moon_number_value));
   ((moon_number_value *) reference->value_addr)->type = LUA_NUMBER;
   ((moon_number_value *) reference->value_addr)->val = number_val;
   ((moon_number_value *) reference->value_addr)->nodes = 1;
@@ -54,11 +54,11 @@ void moon_create_string_value(moon_reference * reference, const char * str) {
 
   while(str[length] != '\0') ++length;
 
-  reference->value_addr = (SRAM_ADDRESS) moon_malloc("moon_create_string_value", sizeof(moon_string_value));
+  reference->value_addr = (SRAM_ADDRESS) MOON_MALLOC("moon_create_string_value", sizeof(moon_string_value));
 
   MOON_AS_STRING(reference)->type = LUA_STRING;
   MOON_AS_STRING(reference)->nodes = 1;
-  MOON_AS_STRING(reference)->string_addr = (SRAM_ADDRESS) moon_malloc("moon_create_string_value (cstr)", length + 1);
+  MOON_AS_STRING(reference)->string_addr = (SRAM_ADDRESS) MOON_MALLOC("moon_create_string_value (cstr)", length + 1);
   MOON_AS_STRING(reference)->length = length;
 
   for (index = 0; index < length; ++index) {
@@ -69,7 +69,7 @@ void moon_create_string_value(moon_reference * reference, const char * str) {
 }
 
 static void create_api_value(moon_reference * reference, void (*api_func)(moon_closure *, BOOL)) {
-  reference->value_addr = (SRAM_ADDRESS) moon_malloc("create_api_value", sizeof(moon_api_value));
+  reference->value_addr = (SRAM_ADDRESS) MOON_MALLOC("create_api_value", sizeof(moon_api_value));
   MOON_AS_API(reference)->type = LUA_API;
   MOON_AS_API(reference)->nodes = 1;
   MOON_AS_API(reference)->func = api_func;
@@ -83,7 +83,7 @@ static void create_upvalues(moon_closure * closure, moon_closure * parent);
 static void init_hash(moon_hash * hash);
 
 moon_closure * moon_create_closure(PGM_VOID_P prototype_addr, uint16_t prototype_addr_cursor, moon_closure * parent) {
-  moon_closure * closure = (moon_closure *) moon_malloc("moon_create_closure", sizeof(moon_closure));
+  moon_closure * closure = (moon_closure *) MOON_MALLOC("moon_create_closure", sizeof(moon_closure));
 
   closure->type = LUA_CLOSURE;
   closure->nodes = 0;
@@ -101,17 +101,17 @@ moon_closure * moon_create_closure(PGM_VOID_P prototype_addr, uint16_t prototype
 }
 
 static moon_prototype * create_prototype() {
-  return (moon_prototype *) moon_malloc("create_prototype", sizeof(moon_prototype));
+  return (moon_prototype *) MOON_MALLOC("create_prototype", sizeof(moon_prototype));
 }
 
 void moon_delete_value(moon_value * value) {
   if (value == NULL) return;
 
   if (value->type == LUA_STRING) {
-    moon_free("moon_delete_value (cstr)", ((moon_string_value *) value)->string_addr);
+    MOON_FREE("moon_delete_value (cstr)", ((moon_string_value *) value)->string_addr);
   }
 
-  moon_free("moon_delete_value", value);
+  MOON_FREE("moon_delete_value", value);
   value = NULL;
 }
 
@@ -123,34 +123,34 @@ static void create_progmem_value_copy(moon_reference * dest, moon_reference * sr
     case LUA_NIL:
     case LUA_TRUE:
     case LUA_FALSE:
-      dest->value_addr = (SRAM_ADDRESS) moon_malloc("create_progmem_value_copy (NIL/TRUE/FALSE)", sizeof(moon_value));
+      dest->value_addr = (SRAM_ADDRESS) MOON_MALLOC("create_progmem_value_copy (NIL/TRUE/FALSE)", sizeof(moon_value));
       progmem_cpy(dest->value_addr, src->value_addr, sizeof(moon_value), 0);
       dest->is_copy = TRUE;
       dest->is_progmem = FALSE;
       break;
 
     case LUA_INT:
-      dest->value_addr = (SRAM_ADDRESS) moon_malloc("create_progmem_value_copy, (INT)", sizeof(moon_int_value));
+      dest->value_addr = (SRAM_ADDRESS) MOON_MALLOC("create_progmem_value_copy, (INT)", sizeof(moon_int_value));
       progmem_cpy(dest->value_addr, src->value_addr, sizeof(moon_int_value), 0);
       dest->is_copy = TRUE;
       dest->is_progmem = FALSE;
       break;
 
     case LUA_NUMBER:
-      dest->value_addr = (SRAM_ADDRESS) moon_malloc("create_progmem_value_copy NUMBER", sizeof(moon_number_value));
+      dest->value_addr = (SRAM_ADDRESS) MOON_MALLOC("create_progmem_value_copy NUMBER", sizeof(moon_number_value));
       progmem_cpy(dest->value_addr, src->value_addr, sizeof(moon_number_value), 0);
       dest->is_copy = TRUE;
       dest->is_progmem = FALSE;
       break;
 
     case LUA_STRING:
-      dest->value_addr = (SRAM_ADDRESS) moon_malloc("create_progmem_value_copy STRING", sizeof(moon_string_value));
+      dest->value_addr = (SRAM_ADDRESS) MOON_MALLOC("create_progmem_value_copy STRING", sizeof(moon_string_value));
       dest->is_progmem = FALSE;
 
       progmem_cpy(&string_value, src->value_addr, sizeof(moon_string_value), 0);
       progmem_cpy(dest->value_addr, src->value_addr, sizeof(moon_string_value), 0);
 
-      ((moon_string_value *) dest->value_addr)->string_addr = (SRAM_ADDRESS) moon_malloc("create_progmem_value_copy CSTRING", ((moon_string_value *) dest->value_addr)->length + 1);
+      ((moon_string_value *) dest->value_addr)->string_addr = (SRAM_ADDRESS) MOON_MALLOC("create_progmem_value_copy CSTRING", ((moon_string_value *) dest->value_addr)->length + 1);
 
       progmem_cpy(((moon_string_value *) dest->value_addr)->string_addr, string_value.string_addr, ((moon_string_value *) dest->value_addr)->length, 0);
 
@@ -160,7 +160,7 @@ static void create_progmem_value_copy(moon_reference * dest, moon_reference * sr
       break;
 
     case LUA_API:
-      dest->value_addr = (SRAM_ADDRESS) moon_malloc("create_progmem_value_copy API", sizeof(moon_api_value));
+      dest->value_addr = (SRAM_ADDRESS) MOON_MALLOC("create_progmem_value_copy API", sizeof(moon_api_value));
       progmem_cpy(dest->value_addr, src->value_addr, sizeof(moon_api_value), 0);
       dest->is_copy = TRUE;
       dest->is_progmem = FALSE;
@@ -356,7 +356,7 @@ static BOOL find_hash_value(moon_reference * result, moon_hash * hash, moon_refe
 
 static void set_hash_pair(moon_hash * hash, moon_reference * key_reference, moon_reference * value_reference) {
   uint16_t index = 0;
-  moon_hash_pair * new_pair = (moon_hash_pair *) moon_malloc("set_hash_pair", sizeof(moon_hash_pair));
+  moon_hash_pair * new_pair = (moon_hash_pair *) MOON_MALLOC("set_hash_pair", sizeof(moon_hash_pair));
   moon_hash_pair * pair = NULL;
   moon_hash_pair * previous = NULL;
 
@@ -410,7 +410,7 @@ static void copy_constant_reference(moon_reference * dest, moon_prototype * prot
 static void create_register(moon_closure * closure, uint16_t index) {
   if (closure->registers[index] != NULL) return;
 
-  closure->registers[index] = (moon_reference *) moon_malloc("create_register", sizeof(moon_reference));
+  closure->registers[index] = (moon_reference *) MOON_MALLOC("create_register", sizeof(moon_reference));
   moon_set_to_nil(closure->registers[index]);
 }
 
@@ -467,7 +467,7 @@ static void delete_registers(moon_closure * closure) {
 
   for (index = 0; index < prototype.max_stack_size; ++index) {
     if (closure->registers[index] != NULL) {
-      moon_free("delete_registers", closure->registers[index]);
+      MOON_FREE("delete_registers", closure->registers[index]);
       closure->registers[index] = NULL;
     }
   }
@@ -613,9 +613,9 @@ static void create_op_concat_result(moon_reference * result, moon_value * value_
 
   uint16_t length = ((moon_string_value *) value_a)->length + ((moon_string_value *) value_b)->length;
 
-  result->value_addr = (SRAM_ADDRESS) moon_malloc("create_op_concat_result", sizeof(moon_string_value));
+  result->value_addr = (SRAM_ADDRESS) MOON_MALLOC("create_op_concat_result", sizeof(moon_string_value));
   ((moon_string_value *) result->value_addr)->type = LUA_STRING;
-  ((moon_string_value *) result->value_addr)->string_addr = (SRAM_ADDRESS) moon_malloc("create_op_concat_result (cstr)", length + 1);
+  ((moon_string_value *) result->value_addr)->string_addr = (SRAM_ADDRESS) MOON_MALLOC("create_op_concat_result (cstr)", length + 1);
   ((moon_string_value *) result->value_addr)->length = length;
   ((moon_string_value *) result->value_addr)->nodes = 1;
 

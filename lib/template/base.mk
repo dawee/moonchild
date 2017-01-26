@@ -5,21 +5,20 @@ PROJECT_MAIN ?=
 EXTRAS_FLAGS ?=
 
 moon_src := $(wildcard ${moon_root}/src/moonchild/*.c)
+monitor_src := $(wildcard ${moon_root}/src/monitor/*.c)
 simulator_src := $(wildcard ${moon_root}/src/simulator/**/*.c)
 
-host_objects := $(patsubst ${moon_root}/src/%.c, target/host/%.o, ${moon_src} ${simulator_src})
+host_objects := $(patsubst ${moon_root}/src/%.c, target/host/%.o, ${monitor_src} ${simulator_src} ${moon_src})
 avr_objects := $(patsubst ${moon_root}/src/%.c, target/avr/%.o, ${moon_src})
 
-ifeq ($(strip $(PROJECT_MAIN)),)
-	common_flags := -I${moon_root}/src/moonchild ${EXTRAS_FLAGS}
-else
-	common_flags := -I${moon_root}/src/moonchild ${EXTRAS_FLAGS} -DMOONCHILD_PROJECT_MAIN=${PROJECT_MAIN}
+common_flags := -I${moon_root}/src/monitor -I${moon_root}/src/moonchild ${EXTRAS_FLAGS}
+
+ifneq ($(strip $(PROJECT_MAIN)),)
+	common_flags := ${common_flags} -DMOONCHILD_PROJECT_MAIN=${PROJECT_MAIN}
 endif
 
 avr_flags := ${common_flags} -DF_CPU=${avr_fcpu}
-host_flags := ${common_flags} \
-	-I${moon_root}/src/simulator \
-	-DMOONCHILD_SIMULATOR
+host_flags := ${common_flags} -I${moon_root}/src/simulator -DMOONCHILD_SIMULATOR
 
 deploy: avr
 	@avrdude -F -V -c arduino -p ${avr_mmcu} -P ${avr_port} -b ${avr_baudrate} -U flash:w:target/avr/${project_basename}.hex
