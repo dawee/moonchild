@@ -5,13 +5,13 @@ PROJECT_MAIN ?=
 EXTRAS_FLAGS ?=
 
 moon_src := $(wildcard ${moon_root}/src/moonchild/*.c)
-monitor_src := $(wildcard ${moon_root}/src/monitor/*.c)
+memory_src := $(wildcard ${moon_root}/src/memory/*.c)
 simulator_src := $(wildcard ${moon_root}/src/simulator/**/*.c)
 
-host_objects := $(patsubst ${moon_root}/src/%.c, target/host/%.o, ${monitor_src} ${simulator_src} ${moon_src})
-avr_objects := $(patsubst ${moon_root}/src/%.c, target/avr/%.o, ${moon_src})
+host_objects := $(patsubst ${moon_root}/src/%.c, target/host/%.o, ${memory_src} ${simulator_src} ${moon_src})
+avr_objects := $(patsubst ${moon_root}/src/%.c, target/avr/%.o, ${memory_src} ${moon_src})
 
-common_flags := -I${moon_root}/src/monitor -I${moon_root}/src/moonchild ${EXTRAS_FLAGS}
+common_flags := -I${moon_root}/src/memory -I${moon_root}/src/moonchild ${EXTRAS_FLAGS}
 
 ifneq ($(strip $(PROJECT_MAIN)),)
 	common_flags := ${common_flags} -DMOONCHILD_PROJECT_MAIN=${PROJECT_MAIN}
