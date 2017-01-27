@@ -2,11 +2,11 @@
 #include "moonchild.h"
 #include "monitor.h"
 
-moon_closure * create_main_closure();
+moon_closure * create_return_int_closure();
 
 TEST should_return_42(void) {
     moon_reference buf_ref;
-    moon_closure * closure = create_main_closure();
+    moon_closure * closure = create_return_int_closure();
 
     moon_run_closure(closure, NULL);
     moon_create_value_copy(&buf_ref, &(closure->result));
@@ -23,7 +23,7 @@ TEST should_return_42(void) {
 TEST should_not_leak_at_reload(void) {
     int memo;
 
-    moon_closure * closure = create_main_closure();
+    moon_closure * closure = create_return_int_closure();
     moon_run_closure(closure, NULL);
 
     memo = moon_monitor_get_total();
