@@ -98,18 +98,18 @@ enum MOON_OPCODES {
  */
 
 enum MOON_TYPES {
-  LUA_NIL,
-  LUA_TRUE,
-  LUA_FALSE,
-  LUA_INT,
-  LUA_NUMBER,
-  LUA_STRING,
-  LUA_CLOSURE,
-  LUA_API,
+  MOON_TYPE_NIL,
+  MOON_TYPE_TRUE,
+  MOON_TYPE_FALSE,
+  MOON_TYPE_INT,
+  MOON_TYPE_NUMBER,
+  MOON_TYPE_STRING,
+  MOON_TYPE_CLOSURE,
+  MOON_TYPE_API,
 };
 
-typedef int16_t CTYPE_LUA_INT;
-typedef float CTYPE_LUA_NUMBER;
+typedef int16_t MOON_CTYPE_INT;
+typedef float MOON_CTYPE_NUMBER;
 
 typedef struct {
   uint8_t type;
@@ -119,13 +119,13 @@ typedef struct {
 typedef struct {
   uint8_t type;
   uint16_t nodes;
-  CTYPE_LUA_INT val;
+  MOON_CTYPE_INT val;
 } moon_int_value;
 
 typedef struct {
   uint8_t type;
   uint16_t nodes;
-  CTYPE_LUA_NUMBER val;
+  MOON_CTYPE_NUMBER val;
 } moon_number_value;
 
 typedef struct {
@@ -217,13 +217,13 @@ const moon_value MOON_FALSE_VALUE PROGMEM;
  * Types Macros
  */
 
-#define MOON_IS_NIL(ref) (((moon_value *) (ref)->value_addr)->type == LUA_NIL)
-#define MOON_IS_TRUE(ref) (((moon_value *) (ref)->value_addr)->type == LUA_TRUE)
-#define MOON_IS_FALSE(ref) (((moon_value *) (ref)->value_addr)->type == LUA_FALSE)
-#define MOON_IS_INT(ref) (((moon_value *) (ref)->value_addr)->type == LUA_INT)
-#define MOON_IS_NUMBER(ref) (((moon_value *) (ref)->value_addr)->type == LUA_NUMBER)
-#define MOON_IS_STRING(ref) (((moon_value *) (ref)->value_addr)->type == LUA_STRING)
-#define MOON_IS_CLOSURE(ref) (((moon_value *) (ref)->value_addr)->type == LUA_CLOSURE)
+#define MOON_IS_NIL(ref) (((moon_value *) (ref)->value_addr)->type == MOON_TYPE_NIL)
+#define MOON_IS_TRUE(ref) (((moon_value *) (ref)->value_addr)->type == MOON_TYPE_TRUE)
+#define MOON_IS_FALSE(ref) (((moon_value *) (ref)->value_addr)->type == MOON_TYPE_FALSE)
+#define MOON_IS_INT(ref) (((moon_value *) (ref)->value_addr)->type == MOON_TYPE_INT)
+#define MOON_IS_NUMBER(ref) (((moon_value *) (ref)->value_addr)->type == MOON_TYPE_NUMBER)
+#define MOON_IS_STRING(ref) (((moon_value *) (ref)->value_addr)->type == MOON_TYPE_STRING)
+#define MOON_IS_CLOSURE(ref) (((moon_value *) (ref)->value_addr)->type == MOON_TYPE_CLOSURE)
 
 #define MOON_IS_ARITHMETIC(ref) (MOON_IS_INT(ref) || MOON_IS_NUMBER(ref))
 
@@ -248,6 +248,6 @@ void moon_set_to_nil(moon_reference * reference);
 void moon_set_to_true(moon_reference * reference);
 void moon_set_to_false(moon_reference * reference);
 void moon_add_global(const char * key_str, moon_reference * value_reference);
-void moon_create_int_value(moon_reference * reference, CTYPE_LUA_INT int_val);
+void moon_create_int_value(moon_reference * reference, MOON_CTYPE_INT int_val);
 
 #endif
