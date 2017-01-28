@@ -1,5 +1,5 @@
-#ifndef SIM_PGMSPACE_H
-#define SIM_PGMSPACE_H
+#ifndef SIM_AVR_PGMSPACE_H
+#define SIM_AVR_PGMSPACE_H
 
 #define PROGMEM
 typedef void * PGM_VOID_P;

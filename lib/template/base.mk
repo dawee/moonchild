@@ -18,13 +18,13 @@ ifneq ($(strip $(PROJECT_MAIN)),)
 endif
 
 avr_flags := ${common_flags} -DF_CPU=${avr_fcpu}
-host_flags := ${common_flags} -I${moon_root}/src/simulator -DMOONCHILD_SIMULATOR
+host_flags := ${common_flags} -I${moon_root}/src/simulator -DMOONCHILD_SIMULATOR -lm
 
 deploy: avr
 	@avrdude -F -V -c arduino -p ${avr_mmcu} -P ${avr_port} -b ${avr_baudrate} -U flash:w:target/avr/${project_basename}.hex
 
 host: ${host_objects}
-	@${CC} ${host_flags} -o ${HOST_TARGET} ${host_objects} ${project_basename}.c ${PROJECT_MAIN}
+	@${CC} ${host_objects} ${project_basename}.c ${PROJECT_MAIN} ${host_flags} -o ${HOST_TARGET}
 
 target/host/%.o: ${moon_root}/src/%.c
 	@mkdir -p $(dir $@)
