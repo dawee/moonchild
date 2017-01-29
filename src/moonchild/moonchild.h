@@ -234,6 +234,15 @@ const moon_value MOON_FALSE_VALUE PROGMEM;
 #define MOON_AS_CSTRING(ref) ((char *)(MOON_AS_STRING(ref)->string_addr))
 #define MOON_AS_CLOSURE(ref) ((moon_closure *)((ref)->value_addr))
 #define MOON_AS_API(ref) ((moon_api_value *)((ref)->value_addr))
+#define MOON_AS_GETSET(ref) ((moon_getset_value *)((ref)->value_addr))
+
+
+#define MOON_COPY_VALUE(dest, src, size) \
+  (dest)->value_addr = (SRAM_ADDRESS) MOON_MALLOC("copy_value", size); \
+  progmem_cpy((dest)->value_addr, (src)->value_addr, size, 0); \
+  (dest)->is_copy = TRUE; \
+  (dest)->is_progmem = FALSE;
+
 
 void moon_init();
 void moon_run_closure(moon_closure * closure, moon_closure * parent);

@@ -123,24 +123,10 @@ static void create_progmem_value_copy(moon_reference * dest, moon_reference * sr
     case MOON_TYPE_NIL:
     case MOON_TYPE_TRUE:
     case MOON_TYPE_FALSE:
-      dest->value_addr = (SRAM_ADDRESS) MOON_MALLOC("create_progmem_value_copy (NIL/TRUE/FALSE)", sizeof(moon_value));
-      progmem_cpy(dest->value_addr, src->value_addr, sizeof(moon_value), 0);
-      dest->is_copy = TRUE;
-      dest->is_progmem = FALSE;
-      break;
-
     case MOON_TYPE_INT:
-      dest->value_addr = (SRAM_ADDRESS) MOON_MALLOC("create_progmem_value_copy, (INT)", sizeof(moon_int_value));
-      progmem_cpy(dest->value_addr, src->value_addr, sizeof(moon_int_value), 0);
-      dest->is_copy = TRUE;
-      dest->is_progmem = FALSE;
-      break;
-
     case MOON_TYPE_NUMBER:
-      dest->value_addr = (SRAM_ADDRESS) MOON_MALLOC("create_progmem_value_copy NUMBER", sizeof(moon_number_value));
-      progmem_cpy(dest->value_addr, src->value_addr, sizeof(moon_number_value), 0);
-      dest->is_copy = TRUE;
-      dest->is_progmem = FALSE;
+    case MOON_TYPE_API:
+      MOON_COPY_VALUE(dest, src, sizeof(moon_int_value));
       break;
 
     case MOON_TYPE_STRING:
@@ -157,13 +143,6 @@ static void create_progmem_value_copy(moon_reference * dest, moon_reference * sr
       ((char *)(((moon_string_value *) dest->value_addr)->string_addr))[((moon_string_value *) dest->value_addr)->length] = '\0';
 
       dest->is_copy = TRUE;
-      break;
-
-    case MOON_TYPE_API:
-      dest->value_addr = (SRAM_ADDRESS) MOON_MALLOC("create_progmem_value_copy API", sizeof(moon_api_value));
-      progmem_cpy(dest->value_addr, src->value_addr, sizeof(moon_api_value), 0);
-      dest->is_copy = TRUE;
-      dest->is_progmem = FALSE;
       break;
 
     default:
