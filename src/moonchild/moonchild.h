@@ -267,5 +267,6 @@ void moon_set_to_true(moon_reference * reference);
 void moon_set_to_false(moon_reference * reference);
 void moon_add_global(const char * key_str, moon_reference * value_reference);
 void moon_create_int_value(moon_reference * reference, MOON_CTYPE_INT int_val);
+void moon_create_getset_value(moon_reference * reference, void (*setter)(moon_reference *, moon_reference *), void (*getter)(moon_reference *));
 
 #endif

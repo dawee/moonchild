@@ -1,5 +1,6 @@
 #include "monitor.h"
 #include "moonchild.h"
+#include "api.h"
 
 #include <stdio.h>
 #include <stdlib.h>
@@ -68,19 +69,19 @@ void moon_create_string_value(moon_reference * reference, const char * str) {
   MOON_AS_CSTRING(reference)[length] = '\0';
 }
 
-static void create_api_value(moon_reference * reference, void (*api_func)(moon_closure *, BOOL)) {
-  reference->value_addr = (SRAM_ADDRESS) MOON_MALLOC("create_api_value", sizeof(moon_api_value));
-  MOON_AS_API(reference)->type = MOON_TYPE_API;
-  MOON_AS_API(reference)->nodes = 1;
-  MOON_AS_API(reference)->func = api_func;
-}
-
-static void create_getset_value(moon_reference * reference, void (*setter)(moon_reference *, moon_reference *), void (*getter)(moon_reference *)) {
+void moon_create_getset_value(moon_reference * reference, void (*setter)(moon_reference *, moon_reference *), void (*getter)(moon_reference *)) {
   reference->value_addr = (SRAM_ADDRESS) MOON_MALLOC("create_getset_value", sizeof(moon_getset_value));
   MOON_AS_GETSET(reference)->type = MOON_TYPE_GETSET;
   MOON_AS_GETSET(reference)->nodes = 1;
   MOON_AS_GETSET(reference)->setter = setter;
   MOON_AS_GETSET(reference)->getter = getter;
+}
+
+static void create_api_value(moon_reference * reference, void (*api_func)(moon_closure *, BOOL)) {
+  reference->value_addr = (SRAM_ADDRESS) MOON_MALLOC("create_api_value", sizeof(moon_api_value));
+  MOON_AS_API(reference)->type = MOON_TYPE_API;
+  MOON_AS_API(reference)->nodes = 1;
+  MOON_AS_API(reference)->func = api_func;
 }
 
 static void init_registers(moon_closure * closure);
@@ -1204,4 +1205,5 @@ void moon_add_global_api_func(const char * key_str, void (*api_func)(moon_closur
 
 void moon_init() {
   init_hash(&globals_hash);
+  moon_feed_api();
 }
