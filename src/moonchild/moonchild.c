@@ -75,6 +75,14 @@ static void create_api_value(moon_reference * reference, void (*api_func)(moon_c
   MOON_AS_API(reference)->func = api_func;
 }
 
+static void create_getset_value(moon_reference * reference, void (*setter)(moon_reference *, moon_reference *), void (*getter)(moon_reference *)) {
+  reference->value_addr = (SRAM_ADDRESS) MOON_MALLOC("create_getset_value", sizeof(moon_getset_value));
+  MOON_AS_GETSET(reference)->type = MOON_TYPE_GETSET;
+  MOON_AS_GETSET(reference)->nodes = 1;
+  MOON_AS_GETSET(reference)->setter = setter;
+  MOON_AS_GETSET(reference)->getter = getter;
+}
+
 static void init_registers(moon_closure * closure);
 static void init_upvalues(moon_closure * closure);
 static void create_registers(moon_closure * closure);
@@ -308,6 +316,27 @@ static void init_hash(moon_hash * hash) {
   hash->count = 0;
 }
 
+static void read_hash_value(moon_reference * dest, moon_reference * src) {
+  moon_reference buf_ref;
+
+  moon_create_value_copy(&buf_ref, src);
+
+  if (MOON_IS_GETSET(&buf_ref)) {
+    if (MOON_AS_GETSET(&buf_ref)->getter != NULL) {
+      if (buf_ref.is_copy == TRUE) moon_delete_value((moon_value *) buf_ref.value_addr);
+      return;
+    }
+
+    MOON_AS_GETSET(&buf_ref)->getter(dest);
+
+    if (buf_ref.is_copy == TRUE) moon_delete_value((moon_value *) buf_ref.value_addr);
+    return;
+  }
+
+  if (buf_ref.is_copy == TRUE) moon_delete_value((moon_value *) buf_ref.value_addr);
+  copy_reference(dest, src);
+}
+
 static BOOL find_hash_value(moon_reference * result, moon_hash * hash, moon_reference * key_reference) {
   uint16_t index = 0;
   BOOL found = FALSE;
@@ -321,7 +350,8 @@ static BOOL find_hash_value(moon_reference * result, moon_hash * hash, moon_refe
     found = equals(&(pair->key_reference), &buf_key_ref);
 
     if (found == TRUE) {
-      copy_reference(result, &(pair->value_reference));
+      read_hash_value(result, &(pair->value_reference));
+
       break;
     }
 

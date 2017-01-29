@@ -106,6 +106,7 @@ enum MOON_TYPES {
   MOON_TYPE_STRING,
   MOON_TYPE_CLOSURE,
   MOON_TYPE_API,
+  MOON_TYPE_GETSET,
 };
 
 typedef int16_t MOON_CTYPE_INT;
@@ -196,6 +197,12 @@ typedef struct {
   void (*func)(moon_closure *, BOOL);
 } moon_api_value;
 
+typedef struct {
+  uint8_t type;
+  uint16_t nodes;
+  void (*setter)(moon_reference *, moon_reference *);
+  void (*getter)(moon_reference *);
+} moon_getset_value;
 
 const moon_value MOON_NIL_VALUE PROGMEM;
 const moon_value MOON_TRUE_VALUE PROGMEM;
@@ -224,6 +231,8 @@ const moon_value MOON_FALSE_VALUE PROGMEM;
 #define MOON_IS_NUMBER(ref) (((moon_value *) (ref)->value_addr)->type == MOON_TYPE_NUMBER)
 #define MOON_IS_STRING(ref) (((moon_value *) (ref)->value_addr)->type == MOON_TYPE_STRING)
 #define MOON_IS_CLOSURE(ref) (((moon_value *) (ref)->value_addr)->type == MOON_TYPE_CLOSURE)
+#define MOON_IS_API(ref) (((moon_value *) (ref)->value_addr)->type == MOON_TYPE_API)
+#define MOON_IS_GETSET(ref) (((moon_value *) (ref)->value_addr)->type == MOON_TYPE_GETSET)
 
 #define MOON_IS_ARITHMETIC(ref) (MOON_IS_INT(ref) || MOON_IS_NUMBER(ref))
 
